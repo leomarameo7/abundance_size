@@ -1,0 +1,180 @@
+---
+title: "Clean data for Abundance - size spectra and beavers"
+author: "Leonardo Capitani"
+date: "08/24/2025"
+date-modified: last-modified
+execute:
+  echo: true
+  warning: false
+  message: false
+format: 
+      html:
+          toc: true
+          code-fold: true
+          code-tools: true
+          code-link: true
+          embed-resources: true
+      pdf:
+             keep-tex: true
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+## Load packages
+
+```{r load_libraries}
+library(tidyverse)
+library(here)
+library(knitr)
+library(ggdist)
+```
+
+## Load raw data: 
+
+```{r load_raw_data}
+
+d <- readxl::read_xlsx(path = here("data", "raw","data_arthropods_flying.xlsx"), sheet = 1) |> 
+select(-c(sort, remarks)) # remove unnecesary column
+glimpse(d)
+```
+
+Metadatada:
+
+```{r metadata}
+
+
+data_dict <- data.frame(
+  Column_name = c(
+    "site", "location", "date", "class", "order", "suborder", "family",
+    "subfamily", "juvenile", "terrestrial", "juv aquatic", "unusable",
+    "size", "remarks"
+  ),
+  Explanation = c(
+    "Study system in which the individual was sampled",
+    "Site at which individual was sampled (i.e. pool or control)",
+    "Collection period during which the individual was sampled (i.e. June or July)",
+    "Taxonomic class the sampled individual belongs to",
+    "Taxonomic order the sampled individual belongs to",
+    "Taxonomic suborder the sampled individual belongs to (where available)",
+    "Taxonomic family the sampled individual belongs to (where available)",
+    "Taxonomic subfamily the sampled individual belongs to (where available)",
+    "Binary value indicating if the sampled individual was a juvenile. 1 = juvenile, 0 = adult",
+    "Binary value indicating if the sampled individual was winged. 1 = non-winged, 0 = winged",
+    "Binary value indicating if the sampled individual belongs to a taxa with purely aquatic juveniles. 1 = aquatic, 0 = not aquatic",
+    "Binary value indicating if the sampled individual came from water (amphipoda, gastropoda)",
+    "Length of the sampled individual in mm (rounded to full numbers). Measured from head to end of abdomen, excluding appendages (wings, limbs, antennae, cerci, etc.)",
+    "Additional comments or information about a given individual"
+  )
+)
+
+kable(data_dict, align = c("l","l"), caption = "Metadata for data_arthropods_flying.xlsx")
+
+```
+
+::: callout-note
+Question:
+
+How many taxa which ones are there?
+:::
+
+```{r get_unique_taxa_families}
+# Get unique families (excluding NA)
+families <- unique(na.omit(d$family))
+
+# Number of unique families
+num_families <- length(families)
+
+# Print results
+cat("Number of unique families:", num_families, "\n\n")
+cat("Families:\n")
+print(sort(families))
+```
+
+Description of the families we have found:
+
+```{r}
+# Families Found Near Streams in Switzerland
+
+families_table <- data.frame(
+  Family = c(
+    "Aphidoidea", "Cantharidae", "Carabidae", "Chrysomelidae",
+    "Coccinellidae", "Cucujidae", "Curculionidae", "Dytiscidae",
+    "Elmidae", "Erebidae", "Forficulidae", "Formicidae",
+    "Gerridae", "Gyrinidae", "Haliplidae", "Hydrophilidae",
+    "Latridiidae", "Monotomidae", "Mordellidae", "Nitidulidae",
+    "Notonectidae", "Panorpidae", "Phalacridae", "Psylloidea",
+    "Scirtidae", "Staphylinidae", "Syrphidae", "Tabanidae",
+    "Vespidae"
+  ),
+  Description = c(
+    "Aphids; plant sap-feeders, often found on riparian vegetation.",
+    "Soldier beetles; predatory or nectar-feeding, common in meadows near water.",
+    "Ground beetles; many species are predators along stream banks.",
+    "Leaf beetles; herbivores on riparian plants.",
+    "Lady beetles; mostly aphid predators on vegetation.",
+    "Flat bark beetles; live under bark, sometimes in moist riparian wood.",
+    "Weevils; herbivores feeding on riparian plants and shrubs.",
+    "Predaceous diving beetles; aquatic predators in streams and ponds.",
+    "Riffle beetles; aquatic, live attached to stones in running water.",
+    "Tiger moths and relatives; larvae feed on diverse plants near water.",
+    "Earwigs; omnivores hiding under stones and wood along streams.",
+    "Ants; common in soils and vegetation along riparian zones.",
+    "Water striders; aquatic predators skating on water surfaces.",
+    "Whirligig beetles; fast swimmers on water surfaces in streams.",
+    "Crawling water beetles; small herbivorous beetles in shallow water.",
+    "Water scavenger beetles; aquatic or semi-aquatic scavengers.",
+    "Minute brown scavenger beetles; found in decaying plant matter.",
+    "Root-eating beetles; often associated with decaying wood.",
+    "Tumbling flower beetles; found on flowers near riparian habitats.",
+    "Sap beetles; feed on decaying fruit, fungi, and plant material.",
+    "Backswimmers; aquatic predators that swim upside down.",
+    "Scorpionflies; scavengers, often in damp shaded stream habitats.",
+    "Shining flower beetles; small pollen feeders.",
+    "Psyllids; plant sap-feeders, often on riparian trees and shrubs.",
+    "Marsh beetles; aquatic or semi-aquatic beetles in wetlands.",
+    "Rove beetles; very diverse predators and scavengers in moist habitats.",
+    "Hoverflies; larvae are aphid predators, adults visit flowers.",
+    "Horse flies; adults feed on blood or nectar, larvae in wet soils.",
+    "Wasps; diverse group of predators and parasitoids near water."
+  )
+)
+
+kable(families_table, caption = "Ecological roles of arthropod families sampled close to streams in Switzerland")
+
+```
+
+## Plot data 
+
+```{r lot_histogram}
+
+# Alternative: side-by-side histogram (use 'dodge')
+ggplot(d, aes(x = size, fill = location)) +
+  geom_histogram(binwidth = 1, color = "black", alpha = 0.7, position = "dodge") +
+  labs(
+    title = "Histogram of individual sizes by sampled location",
+    x = "Size (mm)",
+    y = "Frequency",
+    fill = "Location"
+  ) +
+  theme_bw(base_size = 14)
+
+
+ggplot(d, aes(y = location, x = size, fill = location)) +
+  stat_halfeye(position = "dodge",
+    adjust = 1,       # smoothness of density
+    width = 0.6,        # width of half-eye
+    justification = -0.1,
+    point_interval = mean_qi,  # show mean & 95% interval
+    alpha = 0.7
+  ) +
+  labs(
+    title = "Size Distributions by Location",
+    y = "Location",
+    x = "Size (mm)"
+  ) +
+  theme_bw(base_size = 14)
+
+```
+
+## References

@@ -1,0 +1,81 @@
+common_name,genus,species,trophic_guild
+Bigmouth buffalo,Ictiobus,Ictiobus cyprinellus,Detritivore
+Black crappie,Pomoxis,Pomoxis nigromaculatus,Piscivore
+Blue catfish,Ictalurus,Ictalurus furcatus,Omnivore
+Blue sucker,Cycleptus,Cycleptus elongatus,Invertivore
+Bluegill redear,Lepomis,NA,Invertivore
+Bowfin,Amia,Amia calva,Piscivore
+Channel catfish,Ictalurus,Ictalurus punctatus,Omnivore
+Chestnut lamprey,Ichthyomyzon,Ichthyomizon castaneus,NA
+Common carp,Cyprinus,Cyprinus carpio,Detritivore
+Flathead catfish,Pylodictis,Pylodictis olivaris,Piscivore
+Freshwater drum,Aplodinotus,Aplodinotus grunniens,Invertivore
+Gizzard shad,Clupanodon,Clupanodon thrissa,Herbivore
+Golden redhorse,Moxostoma,Moxostoma erythrurum,Invertivore
+Grass carp,Ctenopharyngodon,Ctenopharyngodon idella,Herbivore
+Largemouth bass,Micropterus,Micropterus salmoides,Piscivore
+Longnose gar,Lepisosteus,Lepisosteus osseus,Piscivore
+Mooneye,Hiodon,Hiodon tergisus,Invertivore
+Moxostoma spp,Mosostoma,NA,NA
+Northern hog sucker,Hypentelium,Hypentelium nigricans,NA
+Quillback,Carpiodes,Carpiodes cyprinus,Detritivore
+Redear sunfish,Lepomis,Lepomis microlophus,Invertivore
+River carpsucker,Carpiodes,Carpiodes carpio,Detritivore
+River redhorse,Moxostoma,Moxostoma carinatum,Invertivore
+Sauger,Sander,Sander canadensis,Piscivore
+Shorthead redhorse,Moxostoma,Moxostoma macrolepidotum,Invertivore
+Shortnose gar,Lepisosteus,Lepisosteus platostomus,Piscivore
+Silver carp,Hypophthalmichthys,Hypophthalmichthys molitrix,Planktivore
+Silver redhorse,Moxostoma,Moxostoma anisurum,Invertivore
+Skipjack herring,Alosa,Alosa chrysochloris,Piscivore
+Smallmouth bass,Micropterus,Micropterus dolomieu,Piscivore
+Smallmouth buffalo,Ictiobus,Ictiobus bubalus,Detritivore
+Spotted bass,Micropterus,Micropterus punctulatus,Piscivore
+Spotted gar,Lepisosteus,Lepisosteus oculatus,Piscivore
+Spotted sucker,Minytrema,Minytrema melanops,Invertivore
+Striped bass,Morone,Morone saxatilis,Piscivore
+Walleye,Sander,Sander vitreus,Piscivore
+White striped bass hybrid,Morone,NA,NA
+White bass,Morone,Morone chrysops,Piscivore
+White crappie,Pomoxis,Pomoxis annularis,Piscivore
+White sucker,Catostomus,Catostomus commersonii,Detritivore
+Yellow bass,Morone,Morone mississippiensis,Invertivore
+Black redhorse,Moxostoma,Moxostoma duquesnii,Invertivore
+Bluegill sunfish,Lepomis,Lepomis macrochirus,Invertivore
+Highfin carpsucker,Carpiodes,Carpiodes velifer,Detritivore
+Alewife,Alosa,Alosa pseudoharengus,Planktivore
+Black buffalo,Ictiobus,Ictiobus niger,Detritivore
+Goldfish,Carassius,Carassius auratus,Detritivore
+Longear sunfish,Lepomis,Lepomis megalotis,Invertivore
+Silver chub,Macrhybopsis,Macrhybopsis storeriana,Invertivore
+Warmouth,Lepomis,Lepomis gulosus,Invertivore
+Lamprey family,NA,NA,NA
+Muskellunge,Esox,Esox masquinongy,Piscivore
+Rock bass,Ambloplites,Ambloplites rupestris,Piscivore
+Goldeye,Hiodon,Hiodon alosoides,Invertivore
+Saugeye,Sander,Sander canadensis,Piscivore
+Northern hogsucker,Hypentelium,Hypentelium nigricans,NA
+Threadfin shad,Dorosoma,Dorosoma petenense,NA
+White carppie,Pomoxis,Pomoxis annularis,Piscivore
+Golden shiner,Notemigonus,Notemigonus crysoleucas,NA
+Bluegill,Lepomis,Lepomis macrochirus,Invertivore
+White perch,Morone,Morone americana,NA
+Pumpkinseed,Lepomis,Lepomis gibbosus,NA
+Green sunfish,Lepomis,Lepomis cyanellus,NA
+Yellow bullhead,Ameiurus,Ameiurus natalis,NA
+Black bullhead,Ameiurus,Ameiurus melas,NA
+NA,NA,NA,NA
+Brown bullhead,Ameiurus,Ameiurus nebulosus,NA
+American eel,Anguilla,Anguilla rostrata,NA
+Striped or white bass,Morone,NA,NA
+Grass pickerel,Esox,Esox americanus,NA
+Green or bluegill sunfish,Lepomis,NA,Invertivore
+Bighead carp,Hypophthalmichthys,Hypophthalmichthys nobilis,NA
+Northern pike,Esox,Esox lucius,NA
+Paddlefish,NA,NA,NA
+Green or warmouth sunfish,Lepomis,NA,Invertivore
+Green or redear sunfish,Lepomis,NA,Invertivore
+Tiger muskellunge,Esox,NA,Piscivore
+Pumpkinseed or bluegill,Lepomis,NA,Invertivore
+Brook silverside,Labidesthes,Labidesthes sicculus,NA
+Stonecat,Noturus,Noturus flavus,NA
