@@ -354,6 +354,14 @@ ggplot(m3, aes(y = location, x = size, fill = location)) +
 
 ```
 
+Save the data to `processed` folder
+
+```{r save_macro_to_processed}
+
+write.csv(m3, here("data","processed","m3.csv"))
+
+```
+
 ## Terrestrial arthropods
 
 This data was collected by Ph.D student Valentin Moser and Master students in 2021 and 2022 within 16 different streams in Switzerland. They sampled terrestrial arthropods by using a 5 x 1 m plot located one meter from the stream's edge in the centre of the beaver pool and control area. Within each plot, they sampled the arthropods at the two ends of the 5 x 1 m plot in cylindrical baskets (50 cm diameter, 67 cm height, woven fabric) using suction sampling on a sunny day between 10:00-17:00 during peak arthropod activity. The samples were stored in ethanol, individuals were counted, measured and identified to order level with the help of a binocular.
