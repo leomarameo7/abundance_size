@@ -28,26 +28,32 @@ library(tidyverse)
 library(here)
 library(knitr)
 library(ggdist)
+library(readxl)
 ```
 
-## Load raw data:
+## Flying arthropods
 
-We are going to load the raw data collected by Ph.D. student Valentin Moser and master sudents / research assistants.
+We are going to load the raw data collected by Ph.D. student [Valentin Moser](https://www.wsl.ch/de/mitarbeitende/moserval/) and research assistants during June 2021 in **eight** different beaver dammed streams (@fig-moserflying). They have sampled in two locations: the main pond created by the beaver (i.e. `pool` factor level within the column `location`)) and 500 meters upstream of that pond (i.e. `control` factor level within the column `location`).
 
-In the folder data/raw you will find `data_arthropods_flying.xlsx`
+![From Moser et al. 2025. Habitat heterogeneity and food availability in beaver-engineered streams foster bat richness, activity and feeding. *Journal of Animal Ecology*](images/RR_discussion.001-01.png){#fig-moserflying fig-align="center"}
 
-This file contains data collected by flying traps like this one:
+In the folder `data/raw` you will find: `data_arthropods_flying.xlsx`
 
-[![Dr. Cornelia Twining deploying the flying arthropods trap into Swiss stream. Photo retriaved from here.](images/Lily_Trap.jpg){fig-align="center"}](https://www.limnologie.uni-konstanz.de/martin-creuzburg/members/academic-members/dr-cornelia-twining/)
+Flying arthropods were collected by traps like this one:
+
+[![Example of the trap used to collect flying arthropods. Dr. Cornelia Twining (Eawag) deploys the arthropods trap over the stream water surface. Click on the photo for the credits.](images/Lily_Trap.jpg){#fig-lily fig-align="center"}](https://www.limnologie.uni-konstanz.de/martin-creuzburg/members/academic-members/dr-cornelia-twining/)
+
+### Load raw data
 
 ```{r load_raw_data}
 
 d <- readxl::read_xlsx(path = here("data", "raw","data_arthropods_flying.xlsx"), sheet = 1) |> 
-select(-c(sort, remarks)) # remove unnecesary column
-glimpse(d)
+select(-c(sort, remarks))|> # remove unnecesary column
+ filter( !is.na(size) ) # remvoe NAs observations
+head(d)
 ```
 
-Metadatada:
+### Metadata:
 
 ```{r metadata}
 
@@ -152,7 +158,7 @@ kable(families_table, caption = "Ecological roles of arthropod families sampled 
 
 ```
 
-## Plot data
+### Plot data
 
 ```{r lot_histogram}
 
@@ -167,7 +173,7 @@ ggplot(d, aes(x = size, fill = location)) +
   ) +
   theme_bw(base_size = 14)
 
-
+# with stat halfeye
 ggplot(d, aes(y = location, x = size, fill = location)) +
   stat_halfeye(position = "dodge",
     adjust = 1,       # smoothness of density
@@ -184,5 +190,41 @@ ggplot(d, aes(y = location, x = size, fill = location)) +
   theme_bw(base_size = 14)
 
 ```
+
+## Macrozoobethos
+
+The macrozoobenthos data we are going to use was collected by Ph.D student [Valentin Moser](https://www.wsl.ch/de/mitarbeitende/moserval/) and ETH Master student [Dominic Tinner](https://dominictinner.pro) within the WSL and Eawag project: [Species interactions in beaver engineered habitats link land-water ecosystem processes](https://www.wsl.ch/de/projekte/sfsf/). They sampled 16 streams with beaver presence (8 streams in 2021 and 8 streams in 2022) across Switzerland (@fig-tinner). The streams varied in surrounding landscape (open landscape or forest), beaver pond area, and stream ecomorphology, i.e., the structural stream characteristics (Supplementary Table Y). The classification of ecomorphology index considered factors such as riparian zone modifications and structural alterations of stream beds to provide an estimate of the degree of anthropogenic impact. The streams included in this study belonged to the first three of the five ecomorphology categories, ranging from near-natural (category level 1) to slightly impacted (2) and heavily impacted (3). The values for ecomorphology were retrieved for each stream from the Swiss Geoportal, specifically the map layer ‘Ecomorphology Level F – River reaches‘ ([link to access](https://www.geo.admin.ch/de/datensatz-27052021-wie-naturnah-sind-unsere-baeche-und-fluesse-oekomorphologie-stufe-f-bafu)).
+
+![Map of Switzerland showing the 16 sampled streams in the lowlands. Maps A and B show a more detailed visualisation, focusing on streams in the western (A) and eastern (B) regions of the country. Streams sampled in 2021 are depicted red, in 2022 blue. Credits and copyrights to Dominic Tinner.](images/Tinner_figure_1.png){#fig-tinner fig-align="center"}
+
+```{r load_macrozoo}
+
+
+```
+
+## Terrestrial arthropods
+
+This data was collected by Ph.D student Valentin Moser and Master students in 2021 and 2022 within 16 different streams in Switzerland. They sampled terrestrial arthropods by using a 5 x 1 m plot located one meter from the stream's edge in the centre of the beaver pool and control area. Within each plot, they sampled the arthropods at the two ends of the 5 x 1 m plot in cylindrical baskets (50 cm diameter, 67 cm height, woven fabric) using suction sampling on a sunny day between 10:00-17:00 during peak arthropod activity. The samples were stored in ethanol, individuals were counted, measured and identified to order level with the help of a binocular.
+
+### Load raw data
+
+```{r load_terrestrial_art_data}
+
+t21 = readxl::read_xlsx(path = here("data", "raw","data_arthropods_terrestrial_2021.xlsx"), sheet = 1) |> mutate(year = 2021) |> rename(laufnummer = Laufnummer) |> select(-c(remarks,adult))
+# load site info 
+
+site_info <- read_csv(here("data", "raw" , "site_info.csv")) |> select (c(2:5,8,9,19,23)) 
+# check common columns 
+intersect(names(t21), names(site_info))
+# meerge site info to t21 df 
+t21_merged <- t21 %>%
+  left_join(site_info, by = "laufnummer") |> 
+  select(latitude_sample, longitude_sample,laufnummer, year, site, sample,location, ecomorphology, area_pool, everything())
+
+# To see rows with NA in size
+t21_merged %>% filter(is.na(size))
+```
+
+### Remove NAs
 
 ## References
