@@ -30,7 +30,15 @@ library(knitr)
 library(ggdist)
 ```
 
-## Load raw data: 
+## Load raw data:
+
+We are going to load the raw data collected by Ph.D. student Valentin Moser and master sudents / research assistants.
+
+In the folder data/raw you will find `data_arthropods_flying.xlsx`
+
+This file contains data collected by flying traps like this one:
+
+[![Dr. Cornelia Twining deploying the flying arthropods trap into Swiss stream. Photo retriaved from here.](images/Lily_Trap.jpg){fig-align="center"}](https://www.limnologie.uni-konstanz.de/martin-creuzburg/members/academic-members/dr-cornelia-twining/)
 
 ```{r load_raw_data}
 
@@ -144,7 +152,7 @@ kable(families_table, caption = "Ecological roles of arthropod families sampled 
 
 ```
 
-## Plot data 
+## Plot data
 
 ```{r lot_histogram}
 
