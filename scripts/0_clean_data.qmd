@@ -193,12 +193,164 @@ ggplot(d, aes(y = location, x = size, fill = location)) +
 
 ## Macrozoobethos
 
-The macrozoobenthos data we are going to use was collected by Ph.D student [Valentin Moser](https://www.wsl.ch/de/mitarbeitende/moserval/) and ETH Master student [Dominic Tinner](https://dominictinner.pro) within the WSL and Eawag project: [Species interactions in beaver engineered habitats link land-water ecosystem processes](https://www.wsl.ch/de/projekte/sfsf/). They sampled 16 streams with beaver presence (8 streams in 2021 and 8 streams in 2022) across Switzerland (@fig-tinner). The streams varied in surrounding landscape (open landscape or forest), beaver pond area, and stream ecomorphology, i.e., the structural stream characteristics (Supplementary Table Y). The classification of ecomorphology index considered factors such as riparian zone modifications and structural alterations of stream beds to provide an estimate of the degree of anthropogenic impact. The streams included in this study belonged to the first three of the five ecomorphology categories, ranging from near-natural (category level 1) to slightly impacted (2) and heavily impacted (3). The values for ecomorphology were retrieved for each stream from the Swiss Geoportal, specifically the map layer ‘Ecomorphology Level F – River reaches‘ ([link to access](https://www.geo.admin.ch/de/datensatz-27052021-wie-naturnah-sind-unsere-baeche-und-fluesse-oekomorphologie-stufe-f-bafu)).
+The macrozoobenthos data we are going to use was collected by Ph.D student [Valentin Moser](https://www.wsl.ch/de/mitarbeitende/moserval/) , UZH Master student [Dominic Tinner](https://dominictinner.pro) and Patrick Hofmann within the WSL-Eawag project: [Species interactions in beaver engineered habitats link land-water ecosystem processes](https://www.wsl.ch/de/projekte/sfsf/). They sampled 14 streams with beaver presence across Switzerland (@fig-tinner). The streams varied in surrounding landscape (open landscape or forest), beaver pond area, and stream ecomorphology, i.e., the structural stream characteristics.
 
-![Map of Switzerland showing the 16 sampled streams in the lowlands. Maps A and B show a more detailed visualisation, focusing on streams in the western (A) and eastern (B) regions of the country. Streams sampled in 2021 are depicted red, in 2022 blue. Credits and copyrights to Dominic Tinner.](images/Tinner_figure_1.png){#fig-tinner fig-align="center"}
+![Map of Switzerland showing the 16 sampled streams in the lowlands. Maps A and B show a more detailed visualisation, focusing on streams in the western (A) and eastern (B) regions of the country. Streams sampled in 2021 are depicted red, in 2022 blue. Sites 15 and 16 were sampled but we lack the individual length estimation. Credits and copyrights to Dominic Tinner.](images/Tinner_figure_1.png){#fig-tinner fig-align="center"}
+
+In each stream, four distinct locations were sampled: the lotic-lentic transition upstream of the dam (inflow), the stagnant water behind the dam (pond), a lotic stream section 25 m downstream of the dam (outflow), and a reach without any influence of beaver engineering (control) @fig-tinner2. The control location was located 500 metres upstream of the main dam at eight sites and 500 metres downstream at the other eight sites. This design assumed that the control location represented the stream habitats as they would have existed prior to the arrival of the beaver in the stream. This assures a comprehensive understanding of the beavers' effect on the freshwater ecosystem by comparing sections directly affected by the dams (i.e. inflow, pond, outflow) with those in their initial state (control).
+
+![Schematic overview of the study design. This illustration depicts the arrangement of sample locations in relation to the beaver dam across the studied streams. Control reaches were set either 500 m upstream of the inflow or 500 m downstream of the outflow, with an equal distributioon of upstream and downstream control reaches across the 16 studied streams. Each sample location was sampled four time consecutively, each focusing on different microhabitats. Additionally, light blue stream colour denotes lotic (fast-flowing) conditions, while dark blue represents the lentic (standing water) conditions in ponds, signifying typical stream current velocity. Credits and copyrights to Dominic Tinner.](images/tinner_fig_2.png){#fig-tinner2 fig-align="center"}
+
+The aquatic invertebrate sampling was conducted in May/June of 2021 or 2022 with the [kick-net method](https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.bafu.admin.ch/dam/bafu/de/dokumente/wasser/uv-umwelt-vollzug/methoden-zur-untersuchung-und-beurteilung-der-fliessgewaesser.pdf.download.pdf/methoden-zur-untersuchung-und-beurteilung-der-fliessgewaesser.pdf&ved=2ahUKEwiBh4fwuKiPAxVa1wIHHTt2NdoQFnoECBYQAQ&usg=AOvVaw1P_RymaemFv9YDq0ukSA8Z). During kick-net sampling, the collector kicks up the sediment in a 0.25 x 0.25 meter area of the stream for 20 seconds while a net is placed downstream of the sampling area to collect swirled-up invertebrates. Each sample location (e.g. inflow) was sampled four times consecutively to capture different microhabitats, with two samples in organic substrates (e.g., submerged macrophytes, roots) and two samples in non-organic substrates (e.g., gravel, sand). The content of the net was then transferred to plastic tubs, where aquatic invertebrates were picked out by hand for a duration of Ab minutes. After this time, the remaining content was washed in the stream (similar to gold panning), leaving only fine sediment with remaining individuals. This was stored together with the picked-out invertebrates in \[\^% ethanol. The sampling in each stream was completed within one day, moving upstream to avoid impacting subsequent samples.
+
+### Predictors:
+
+#### Land use intensity
+
+Land-use intensity data for each study site were extracted by Valentin Moser from Geodienste.ch and swisstopo.admin.ch using ARCGIS (Pro v. 2.8, Esri Inc., 2021 und QGIS 3.40 'Bratislava' 2024). A radius of 250 meters was selected around the centre of each Pool and Control to avoid overlap between paired sampling areas. A visual inspection of the data showed highly reliable classification for agricultural (e.g., crop fields, pastures, areas that farmers maintain for biodiversity) and natural (e.g., forests, riparian areas) land-use. Areas without classified land-use were very often urban areas and human infrastructure, such as streets, railways, and housing. Therefore, missing data was assigned to urban land-use. V. Moser averaged the sum of agricultural, urban, and natural land-use cover types per site across Pool and Control. Agricultural and urban land were summarized into an overall human impact called `human_influence`**.**
+
+#### Stream ecomorphology
+
+The classification of ecomorphology index considered factors such as riparian zone modifications and structural alterations of stream beds to provide an estimate of the degree of anthropogenic impact. The streams included in this study belonged to the first three of the five ecomorphology categories, ranging from near-natural (category level 1) to slightly impacted (2) and heavily impacted (3). The values for ecomorphology were retrieved for each stream from the Swiss Geoportal, specifically the map layer ‘Ecomorphology Level F – River reaches‘ ([link to access](https://www.geo.admin.ch/de/datensatz-27052021-wie-naturnah-sind-unsere-baeche-und-fluesse-oekomorphologie-stufe-f-bafu)).
+
+### Load raw data
 
 ```{r load_macrozoo}
 
+m = read_csv(here("data", "raw", "mzb_size_measurements.csv")) |> select(-c(author))
+
+```
+
+Let's load the covariates/predictors we are interested in:
+
+```{r site_info}
+# load site info 
+
+site_info <- read_csv(here("data", "raw" , "site_info.csv")) |> select (c(2:5,8,9,19,23)) |> select(-c(site, sample))
+
+```
+
+Merge data frames:
+
+```{r merge_macro_site}
+
+m1 <- m  |> 
+  left_join(site_info, by = "laufnummer") |> 
+  select("laufnummer","site","location","taxon","family" ,"taxon_lowest","size","ecomorphology",    "area_pool")
+  
+```
+
+```{r add_human_influence}
+
+h = read_csv(here("data","raw","landuse_valentin.csv")) |> select(2,7)
+# just get the unique value by site 
+h_unique <- h  |> 
+  distinct(site, human_influence)  |> 
+  arrange(site, human_influence)
+
+```
+
+Merge the human influence variable derived by V. Moser to the macrozoobenthos dataframe:
+
+```{r merge_hum_influence}
+
+m2 <- m1  |> 
+  left_join(h_unique, by = "site") 
+
+```
+
+Now we are going to:
+
+-   Renames the existing `location` column to `location_old`.
+
+-   Creates a new column `location` where the first three categories (`inflow`, `outflow`, `pool`) are all grouped under `"beaver"`, and the fourth category stays as it is.
+
+```{r recall_location_column}
+
+m3 <- m2 %>%
+  rename(location_old = location) %>%            # keep old column
+  mutate(location = ifelse(location_old %in% c("Inflow", "Outflow", "Pool"),
+                           "beaver",
+                           location_old))
+
+
+```
+
+Plot the standardized human influence by site:
+
+```{r plot_hum_influe-std}
+# standardise human_influence (z-score)
+h_std <- h %>%
+  mutate(human_influence_std = scale(human_influence)[,1])
+
+# plot
+ggplot(h_std, aes(x = site, y = human_influence_std)) +
+  geom_point(color = "steelblue", size = 3) +
+  theme_minimal() +
+  labs(
+    title = "Standardised Human Influence by Site",
+    x = "Site",
+    y = "Human Influence (standardised)"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+The sites with above-average human influence (\> 0) are: `r paste(h_std %>% filter(human_influence_std > 0) %>% distinct(site) %>% pull(site), collapse = ", ")`.
+
+### Plot
+
+```{r plot_macro}
+
+# Alternative: side-by-side histogram (use 'dodge')
+ggplot(m3, aes(x = size, fill = location)) +
+  geom_histogram(binwidth = 1, color = "black", alpha = 0.7, position = "dodge") +
+  labs(
+    title = "Histogram of individual sizes by sampled location",
+    x = "Size (mm)",
+    y = "Frequency",
+    fill = "Location"
+  ) +
+  theme_bw(base_size = 14)
+# Summarize stats per location
+stats <- m3 %>%
+  group_by(location) %>%
+  summarise(
+    n = n(),
+    mean_size = mean(size, na.rm = TRUE),
+    sd_size = sd(size, na.rm = TRUE),
+    median_size = median(size, na.rm = TRUE)
+  )
+
+# with stat halfeye
+ggplot(m3, aes(y = location, x = size, fill = location)) +
+  stat_halfeye(
+    position = "dodge",
+    adjust = 1.1,       
+    width = 0.6,        
+    justification = -0.1,
+    point_interval = mean_qi,  
+    alpha = 0.7
+  ) +
+  geom_text(
+    data = stats,
+    aes(
+      x = 20,                # fixed at 20 mm
+      y = location,          # map y to location
+      label = paste0("n=", n, "\nmean=", round(mean_size,1),
+                     "\nsd=", round(sd_size,1),
+                     "\nmedian=", round(median_size,1))
+    ),
+    inherit.aes = FALSE,
+    hjust = 0,
+    size = 3.5
+  ) +
+  labs(
+    title = "Size Distributions by Location",
+    y = "Location",
+    x = "Size (mm)"
+  ) +
+  theme_bw(base_size = 14)
 
 ```
 
