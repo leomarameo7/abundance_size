@@ -1,4 +1,7 @@
 library(tidyverse)
+# requires an installation of devtools
+
+devtools::install_github("jswesner/isdbayes")
 library(isdbayes)
 library(janitor)
 library(brms)
