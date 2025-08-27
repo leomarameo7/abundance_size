@@ -1,0 +1,58 @@
+---
+title: "Does beaver influence arthropods' size spectra?"
+author: "Leonardo Capitani & Francesco Pomati"
+date: "08/27/2025"
+date-modified: last-modified
+execute:
+  echo: true
+  warning: false
+  message: false
+format: 
+      html:
+          toc: true
+          code-fold: true
+          code-tools: true
+          code-link: true
+          embed-resources: true
+      pdf:
+             keep-tex: true
+editor: visual
+editor_options: 
+  chunk_output_type: console
+bibliography: references.bib
+---
+
+## Research question:
+
+Our main research question will be:
+
+::: callout-important
+Does beaver influence arthropods' size spectra ?
+:::
+
+### Beavers
+
+You may ask: why do we want to study **beavers**?
+
+The answer is straightforward: beavers (*Castor fiber, Castor canadensis*) are one of the most influential mammalian ecosystem engineers, heavily modifying river corridor hydrology, geomorphology, nutrient cycling, and ecosystems [@larsen2021]. Eradicated at the start of the 19th century, beavers can now be found once again across the Switzerland lowlands. Particularly in the last ten years, they have become so widespread that five to six thousand individuals are currently estimated to live in Swiss streams ! Until now, however, it was unclear whether this was also true of urban and agricultural streams – in other words, precisely those streams that the beavers predominantly inhabit today. Researchers from Eawag and the University of Lausanne have shown that this is indeed the case: beaver ponds not only increased the arthropods biodiversity of two streams in agricultural areas, but also altered the organic matter supply available to them [@robinson2020].
+
+### Size spectra
+
+retrived from [here](https://digital.csic.es/bitstream/10261/389368/2/Ersoy_et_al_2025_Metadata_S1.pdf)
+
+You may ask: why do we want to study the **arthropods' size spectra** ?
+
+The size spectra is the relationship between abundance (or biomass) and individual body weight (Ghilarov 1944; Sheldon et al. 1972).
+
+## 
+Methods
+
+### Data 
+
+We will use ...
+
+### Statistical analysis 
+
+Traditionally, the size spectra is binned into arbitrarily defined body weight classes in a geometric series (Platt and Denman 1977; Silvert and Platt 1978); however, the parameters estimated may be sensitive to the bin width selected (Edwards et al. 2017) and to the size metric considered (e.g., biomass, biovolume or length) (Sprules and Barth 2016). In addition, size spectra fitted with binning-based methods are usually normalized by dividing the abundance (or biomass) by the width of the size classes (Sprules and Barth 2016). To avoid the bias introduced by the use of binned data, more recent approaches have shown that fitting the size spectrum with either a Pareto probability distribution or estimating parameters by maximum likelihood estimation (MLE) can provide more robust and accurate estimates of exponents than binning-based methods (Vidondo et al. 1997; White et al. 2007; Arim et al. 2011; Edwards et al. 2020).
+
+## References
