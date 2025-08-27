@@ -1,6 +1,10 @@
 ---
 title: "Does beaver influence arthropods' size spectra?"
-author: "Leonardo Capitani & Francesco Pomati"
+author: 
+- name: Leonardo Capitani 
+  email: leonardo.capitani@eawag.ch
+- name: Francesco Pomati
+  email: francesco.pomati@eawag.ch
 date: "08/27/2025"
 date-modified: last-modified
 execute:
@@ -22,12 +26,22 @@ editor_options:
 bibliography: references.bib
 ---
 
-## Research question:
+## First things first
 
-Our main research question will be:
+![](images/ftf.jpg){fig-align="right" width="133"}
+
+*The most important things should be done before anything else.*
+
+We want to tell you something:
+
+The first important thing you should do when you are going to start a research project is to think about open-unsolved question(s). Why? Well, research questions play a central role in the scientific method because they indicate the problem that is being addressed, and clearly state what is being investigated [@thelwall2020]. Indeed, the presence of research questions within a research article is an established quality indicator. In fact, research questions form the basis of determining hypotheses, methods, and how interpretations and analysis of outcomes are undertaken [@covvey2024]. Once you have a good question to investigate, you can begin to think of ways to answer it! To prevent you to waste time and effort, we suggest to invest fully in the creation of rigorous research questions. Remember: first things first.
+
+Therefore, the unsolved question we will answer is as follow:
 
 ::: callout-important
-Does beaver influence arthropods' size spectra ?
+**Research question:**
+
+Does beaver damming activity influence arthropods abundance-size spectra?
 :::
 
 ### Beavers
@@ -42,7 +56,7 @@ retrived from [here](https://digital.csic.es/bitstream/10261/389368/2/Ersoy_et_a
 
 You may ask: why do we want to study the **arthropods' size spectra** ?
 
-The size spectra is the relationship between abundance (or biomass) and individual body weight (Ghilarov 1944; Sheldon et al. 1972).
+The abundance-size spectra is the relationship between abundance (or biomass) and individual body weight (Ghilarov 1944; Sheldon et al. 1972).
 
 ## 
 Methods
