@@ -4,10 +4,18 @@ library(janitor)
 library(brms)
 library(tidybayes)
 library(ggthemes)
+library(here)
 
-brm_prop_silver_rand = readRDS(file = "models/brm_prop_silver_rand.rds")
-
-newdata = brm_prop_silver_rand$data %>% sample_n(100)
+# load data : subsample 100 observations
+newdata = readRDS(file = here("scripts","others_authors", "jswesner-murry_carp-b39fc98" , "data" , "orc_il_prop.rds"))  %>% sample_n(100)
+## remember: 
+# wt = fish weight
+# catch = number of individual with that weight 
+# xmin = minimum observed weight for that site 
+# xmax = maximum observed weight for that site
+# prop_silver_wt_s = 
+# river = 
+# site_id_f = 
 
 brm_prop_silver_rand_priors =  brm(wt | vreal(catch, xmin, xmax) ~ prop_silver_wt_s * river + (1 | site_id_f) ,
                     data = newdata,

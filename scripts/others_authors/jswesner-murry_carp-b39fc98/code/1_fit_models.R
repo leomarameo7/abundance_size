@@ -1,6 +1,5 @@
 library(tidyverse)
 # requires an installation of devtools
-
 devtools::install_github("jswesner/isdbayes")
 library(isdbayes)
 library(janitor)
@@ -8,7 +7,7 @@ library(brms)
 library(tidybayes)
 library(ggthemes)
 
-orc_il_prop = readRDS(file = "data/orc_il_prop.rds") 
+orc_il_prop = readRDS(file = "scripts/others_authors/jswesner-murry_carp-b39fc98/data/orc_il_prop.rds") 
 
 # fit models (TAKES ~ 15 HOURS)
 
