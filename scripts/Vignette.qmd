@@ -24,6 +24,7 @@ editor: visual
 editor_options: 
   chunk_output_type: console
 bibliography: references.bib
+csl: eco_lett.csl
 ---
 
 ## First things first
@@ -60,13 +61,17 @@ The individual size distribution (ISD, often referred to in the aquatic literatu
 
 $$f_M \propto M^{\lambda}$$
 
-where $\lambda$, called the lambda exponent, is negative (i.e., $\lambda < 0$).
+where $\lambda$, called the lambda exponent, is the rate of decline from small to large individuals (i.e., $\lambda < 0$).
 
 What lambda ($\lambda$) values ​​should we expect?
 
 From different global analysis, $\lambda$ is restricted to a relatively narrow range between about −2.05 and −1.2 [@wesner2024]. For example, global analysis of phytoplankton reveals values of $\lambda = −1.75$ , consistent with predictions based on sublinear scaling of metabolic rate with mass of −3/4 [@perkins2019].
 
-Methods
+#### Ecological implications 
+
+The lambda exponent can be considered as an emergent property of community interactions, most notably trophic energy transfer [@mehner2018]. Flatter $\lambda$ slopes indicate energy passing more efficiently from small, low-trophic position individuals to larger, high-trophic position individuals [@blanchard2009; @mehner2018]. However, there are multiple processes that may disrupt this, in particular, deviations in the relationship between body size and trophic position associated with large individuals feeding at low trophic levels (e.g., [@broadway2015]. In the past, $\lambda$ has been used to address offshore oceanic fishing yields [@blanchard2014][@law2023; @kolding2016], changes in ecosystem health relative to climate change [@queirós2018; @pomeranz2022], and the effects of oligotrophication, eutrophication, pollution, and invasive species [@arranz2023][@buba2017][@murry2024][@pomeranz2019][@murry2014]. Specifically, fishery exploitation tends to steepen $\lambda$ [@jennings2005], whereas abundance shifts to large-bodied low position fish tends to flatten $\lambda$ [@broadway2015][@murry2024].
+
+## Methods
 
 ### Data
 
