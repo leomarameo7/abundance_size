@@ -59,7 +59,7 @@ You may ask: why do we want to study the arthropods' individual size distributio
 
 The individual size distribution (ISD, often referred to in the aquatic literature as the size spectra) is the relationship between abundance and individual body mass [@white2007]. More generally, this is a frequency distribution (or probability density) of body mass of individuals in a community. Generally, there is a negative relationship between individual body size ($M$, measured in mass) on the x-axis and abundance (N) on the y-axis. Indeed, ISDs have often been characterized using a power-law, where the frequency of individuals of body size $M$ follows a function of the form:
 
-$$f_M \propto M^{\lambda}$$
+$$f(M) \propto M^{\lambda}$$
 
 where $\lambda$, called the lambda exponent, is the rate of decline from small to large individuals (i.e., $\lambda < 0$).
 
@@ -67,7 +67,7 @@ What lambda ($\lambda$) values ​​should we expect?
 
 From different global analysis, $\lambda$ is restricted to a relatively narrow range between about −2.05 and −1.2 [@wesner2024]. For example, global analysis of phytoplankton reveals values of $\lambda = −1.75$ , consistent with predictions based on sublinear scaling of metabolic rate with mass of −3/4 [@perkins2019].
 
-#### Ecological implications 
+#### Ecological implications
 
 The lambda exponent can be considered as an emergent property of community interactions, most notably trophic energy transfer [@mehner2018]. Flatter $\lambda$ slopes indicate energy passing more efficiently from small, low-trophic position individuals to larger, high-trophic position individuals [@blanchard2009; @mehner2018]. However, there are multiple processes that may disrupt this, in particular, deviations in the relationship between body size and trophic position associated with large individuals feeding at low trophic levels (e.g., [@broadway2015]. In the past, $\lambda$ has been used to address offshore oceanic fishing yields [@blanchard2014][@law2023; @kolding2016], changes in ecosystem health relative to climate change [@queirós2018; @pomeranz2022], and the effects of oligotrophication, eutrophication, pollution, and invasive species [@arranz2023][@buba2017][@murry2024][@pomeranz2019][@murry2014]. Specifically, fishery exploitation tends to steepen $\lambda$ [@jennings2005], whereas abundance shifts to large-bodied low position fish tends to flatten $\lambda$ [@broadway2015][@murry2024].
 
@@ -81,7 +81,7 @@ We will use ...
 
 Traditionally, the size spectra is binned into arbitrarily defined body weight classes in a geometric series (Platt and Denman 1977; Silvert and Platt 1978); however, the parameters estimated may be sensitive to the bin width selected (Edwards et al. 2017) and to the size metric considered (e.g., biomass, biovolume or length) (Sprules and Barth 2016). In addition, size spectra fitted with binning-based methods are usually normalized by dividing the abundance (or biomass) by the width of the size classes (Sprules and Barth 2016). To avoid the bias introduced by the use of binned data, more recent approaches have shown that fitting the size spectrum with either a Pareto probability distribution or estimating parameters by maximum likelihood estimation (MLE) can provide more robust and accurate estimates of exponents than binning-based methods (Vidondo et al. 1997; White et al. 2007; Arim et al. 2011; Edwards et al. 2020).
 
-#### Why bayesian? 
+#### Why bayesian?
 
 If you have sampled in different times or places resulting in different sample sizes, well, I suggest to be bayesian. The core of the Bayesian theorem is that
 

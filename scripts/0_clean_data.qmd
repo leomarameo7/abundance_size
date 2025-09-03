@@ -19,6 +19,7 @@ format:
 editor: visual
 editor_options: 
   chunk_output_type: console
+bibliography: references.bib
 ---
 
 ## Load packages
@@ -195,19 +196,19 @@ ggplot(d, aes(y = location, x = size, fill = location)) +
 
 The macrozoobenthos data we are going to use was collected by Ph.D student [Valentin Moser](https://www.wsl.ch/de/mitarbeitende/moserval/) , UZH Master student [Dominic Tinner](https://dominictinner.pro) and Patrick Hofmann within the WSL-Eawag project: [Species interactions in beaver engineered habitats link land-water ecosystem processes](https://www.wsl.ch/de/projekte/sfsf/). They sampled 14 streams with beaver presence across Switzerland (@fig-tinner). The streams varied in surrounding landscape (open landscape or forest), beaver pond area, and stream ecomorphology, i.e., the structural stream characteristics.
 
-![Map of Switzerland showing the 16 sampled streams in the lowlands. Maps A and B show a more detailed visualisation, focusing on streams in the western (A) and eastern (B) regions of the country. Streams sampled in 2021 are depicted red, in 2022 blue. Sites 15 and 16 were sampled but we lack the individual length estimation. Credits and copyrights to Dominic Tinner.](images/Tinner_figure_1.png){#fig-tinner fig-align="center"}
+![Map of Switzerland showing the 16 sampled streams in the lowlands. Maps A and B show a more detailed visualization, focusing on streams in the western (A) and eastern (B) regions of the country. Streams sampled in 2021 are depicted red, in 2022 blue. Note that sites 15 and 16 were sampled but we lack the posterior in lab individual length estimation. Credits and copyrights to Dominic Tinner.](images/Tinner_figure_1.png){#fig-tinner fig-align="center"}
 
 In each stream, four distinct locations were sampled: the lotic-lentic transition upstream of the dam (inflow), the stagnant water behind the dam (pond), a lotic stream section 25 m downstream of the dam (outflow), and a reach without any influence of beaver engineering (control) @fig-tinner2. The control location was located 500 metres upstream of the main dam at eight sites and 500 metres downstream at the other eight sites. This design assumed that the control location represented the stream habitats as they would have existed prior to the arrival of the beaver in the stream. This assures a comprehensive understanding of the beavers' effect on the freshwater ecosystem by comparing sections directly affected by the dams (i.e. inflow, pond, outflow) with those in their initial state (control).
 
 ![Schematic overview of the study design. This illustration depicts the arrangement of sample locations in relation to the beaver dam across the studied streams. Control reaches were set either 500 m upstream of the inflow or 500 m downstream of the outflow, with an equal distributioon of upstream and downstream control reaches across the 16 studied streams. Each sample location was sampled four time consecutively, each focusing on different microhabitats. Additionally, light blue stream colour denotes lotic (fast-flowing) conditions, while dark blue represents the lentic (standing water) conditions in ponds, signifying typical stream current velocity. Credits and copyrights to Dominic Tinner.](images/tinner_fig_2.png){#fig-tinner2 fig-align="center"}
 
-The aquatic invertebrate sampling was conducted in May/June of 2021 or 2022 with the [kick-net method](https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.bafu.admin.ch/dam/bafu/de/dokumente/wasser/uv-umwelt-vollzug/methoden-zur-untersuchung-und-beurteilung-der-fliessgewaesser.pdf.download.pdf/methoden-zur-untersuchung-und-beurteilung-der-fliessgewaesser.pdf&ved=2ahUKEwiBh4fwuKiPAxVa1wIHHTt2NdoQFnoECBYQAQ&usg=AOvVaw1P_RymaemFv9YDq0ukSA8Z). During kick-net sampling, the collector kicks up the sediment in a 0.25 x 0.25 meter area of the stream for 20 seconds while a net is placed downstream of the sampling area to collect swirled-up invertebrates. Each sample location (e.g. inflow) was sampled four times consecutively to capture different microhabitats, with two samples in organic substrates (e.g., submerged macrophytes, roots) and two samples in non-organic substrates (e.g., gravel, sand). The content of the net was then transferred to plastic tubs, where aquatic invertebrates were picked out by hand for a duration of Ab minutes. After this time, the remaining content was washed in the stream (similar to gold panning), leaving only fine sediment with remaining individuals. This was stored together with the picked-out invertebrates in \[\^% ethanol. The sampling in each stream was completed within one day, moving upstream to avoid impacting subsequent samples.
+The aquatic invertebrate sampling was conducted in May/June of 2021 or 2022 with the [kick-net method](https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.bafu.admin.ch/dam/bafu/de/dokumente/wasser/uv-umwelt-vollzug/methoden-zur-untersuchung-und-beurteilung-der-fliessgewaesser.pdf.download.pdf/methoden-zur-untersuchung-und-beurteilung-der-fliessgewaesser.pdf&ved=2ahUKEwiBh4fwuKiPAxVa1wIHHTt2NdoQFnoECBYQAQ&usg=AOvVaw1P_RymaemFv9YDq0ukSA8Z). During kick-net sampling, the collector kicks up the sediment in a 0.25 x 0.25 meter area of the stream for 20 seconds while a net is placed downstream of the sampling area to collect swirled-up invertebrates. Each sample location (e.g. inflow) was sampled four times consecutively to capture different microhabitats, with two samples in organic substrates (e.g., submerged macrophytes, roots) and two samples in non-organic substrates (e.g., gravel, sand). The content of the net was then transferred to plastic tubs, where aquatic invertebrates were picked out by hand for a duration of 15 minutes. After this time, the remaining content was washed in the stream (similar to gold panning), leaving only fine sediment with remaining individuals. This was stored together with the picked-out invertebrates in \[97% ethanol. The sampling in each stream was completed within one day, moving upstream to avoid impacting subsequent samples.
 
 ### Predictors:
 
 #### Land use intensity
 
-Land-use intensity data for each study site were extracted by Valentin Moser from Geodienste.ch and swisstopo.admin.ch using ARCGIS (Pro v. 2.8, Esri Inc., 2021 und QGIS 3.40 'Bratislava' 2024). A radius of 250 meters was selected around the centre of each Pool and Control to avoid overlap between paired sampling areas. A visual inspection of the data showed highly reliable classification for agricultural (e.g., crop fields, pastures, areas that farmers maintain for biodiversity) and natural (e.g., forests, riparian areas) land-use. Areas without classified land-use were very often urban areas and human infrastructure, such as streets, railways, and housing. Therefore, missing data was assigned to urban land-use. V. Moser averaged the sum of agricultural, urban, and natural land-use cover types per site across Pool and Control. Agricultural and urban land were summarized into an overall human impact called `human_influence`**.**
+Land-use intensity data for each study site were extracted by Valentin Moser from Geodienste.ch and swisstopo.admin.ch using ARCGIS (Pro v. 2.8, Esri Inc., 2021 und QGIS 3.40 'Bratislava' 2024). A radius of 250 meters was selected around the center of each Pool and Control to avoid overlap between paired sampling areas. A visual inspection of the data showed highly reliable classification for agricultural (e.g., crop fields, pastures, areas that farmers maintain for biodiversity) and natural (e.g., forests, riparian areas) land-use. Areas without classified land-use were very often urban areas and human infrastructure, such as streets, railways, and housing. Therefore, missing data was assigned to urban land-use. [V. Moser](valentin.moser@wsl.ch) averaged the sum of agricultural, urban, and natural land-use cover types per site across Pool and Control. Finally, we aggregate agricultural and urban land cover estimates into an overall human impact variable called `human_influence`**.**
 
 #### Stream ecomorphology
 
@@ -358,11 +359,35 @@ Save the data to `processed` folder
 
 ```{r save_macro_to_processed}
 
-write.csv(m3, here("data","processed","m3.csv"))
+write.csv(m3, here( "data","processed", "m3.csv"  ))
 
 ```
 
 ### From length to dry weight
+
+We are going to estimate arthropod's body mass as J. Pomeranz using taxon-­specific published length-­ weight regressions [@pomeranz2022]. Note that ISD relationships are sensitive to the under sampling of small body sizes. [@perkins2018] sampled benthic macroinvertebrates using comparable methods and found that body sizes smaller than 0.0026 mg were under sampled. Therefore, we will set the minimum body size to 0.0026 mg estimated dry weight before estimating ISD relationships to avoid the under sam- pling of small body sizes.
+
+Load processed data
+
+```{r load_processed_macrozoobenthos}
+
+m3 <- read_csv( here("data", "processed", "m3.csv")) 
+
+m3  |> filter(family != taxon_lowest)
+
+# since there are no difference between the two columns, we remove one of them 
+
+m4 <- m3|> select(-taxon_lowest) |> 
+  # add method column 
+  mutate(method = "kick_net") |> 
+  rename(  order  = taxon)
+```
+
+Extract unique combination of order - family
+
+```{r}
+
+```
 
 Please refer to this [pubblication](https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/ecy.70050) and this <https://github.com/jswesner/get_neon_body_sizes>
 
