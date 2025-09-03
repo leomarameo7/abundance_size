@@ -1,5 +1,5 @@
 ---
-title: "Does beaver influence arthropods' size spectra?"
+title: "Does beaver influence arthropods' individual size distribution?"
 author: 
 - name: Leonardo Capitani 
   email: leonardo.capitani@eawag.ch
@@ -41,7 +41,7 @@ Therefore, the unsolved question we will answer is as follow:
 ::: callout-important
 **Research question:**
 
-Does beaver damming activity influence arthropods abundance-size spectra?
+Does beaver damming activity influence arthropods individual size distribution?
 :::
 
 ### Beavers
@@ -50,23 +50,48 @@ You may ask: why do we want to study **beavers**?
 
 The answer is straightforward: beavers (*Castor fiber, Castor canadensis*) are one of the most influential mammalian ecosystem engineers, heavily modifying river corridor hydrology, geomorphology, nutrient cycling, and ecosystems [@larsen2021]. Eradicated at the start of the 19th century, beavers can now be found once again across the Switzerland lowlands. Particularly in the last ten years, they have become so widespread that five to six thousand individuals are currently estimated to live in Swiss streams ! Until now, however, it was unclear whether this was also true of urban and agricultural streams – in other words, precisely those streams that the beavers predominantly inhabit today. Researchers from Eawag and the University of Lausanne have shown that this is indeed the case: beaver ponds not only increased the arthropods biodiversity of two streams in agricultural areas, but also altered the organic matter supply available to them [@robinson2020].
 
-### Size spectra
+### Individual size distribution
 
 retrived from [here](https://digital.csic.es/bitstream/10261/389368/2/Ersoy_et_al_2025_Metadata_S1.pdf)
 
-You may ask: why do we want to study the **arthropods' size spectra** ?
+You may ask: why do we want to study the arthropods' individual size distribution ?
 
-The abundance-size spectra is the relationship between abundance (or biomass) and individual body weight (Ghilarov 1944; Sheldon et al. 1972).
+The individual size distribution (ISD, often referred to in the aquatic literature as the size spectra) is the relationship between abundance and individual body mass [@white2007]. More generally, this is a frequency distribution (or probability density) of body mass of individuals in a community. Generally, there is a negative relationship between individual body size ($M$, measured in mass) on the x-axis and abundance (N) on the y-axis. Indeed, ISDs have often been characterized using a power-law, where the frequency of individuals of body size $M$ follows a function of the form:
 
-## 
+$$f_M \propto M^{\lambda}$$
+
+where $\lambda$, called the lambda exponent, is negative (i.e., $\lambda < 0$).
+
+What lambda ($\lambda$) values ​​should we expect?
+
+From different global analysis, $\lambda$ is restricted to a relatively narrow range between about −2.05 and −1.2 [@wesner2024]. For example, global analysis of phytoplankton reveals values of $\lambda = −1.75$ , consistent with predictions based on sublinear scaling of metabolic rate with mass of −3/4 [@perkins2019].
+
 Methods
 
-### Data 
+### Data
 
 We will use ...
 
-### Statistical analysis 
+### Statistical analysis
 
 Traditionally, the size spectra is binned into arbitrarily defined body weight classes in a geometric series (Platt and Denman 1977; Silvert and Platt 1978); however, the parameters estimated may be sensitive to the bin width selected (Edwards et al. 2017) and to the size metric considered (e.g., biomass, biovolume or length) (Sprules and Barth 2016). In addition, size spectra fitted with binning-based methods are usually normalized by dividing the abundance (or biomass) by the width of the size classes (Sprules and Barth 2016). To avoid the bias introduced by the use of binned data, more recent approaches have shown that fitting the size spectrum with either a Pareto probability distribution or estimating parameters by maximum likelihood estimation (MLE) can provide more robust and accurate estimates of exponents than binning-based methods (Vidondo et al. 1997; White et al. 2007; Arim et al. 2011; Edwards et al. 2020).
+
+#### Why bayesian? 
+
+If you have sampled in different times or places resulting in different sample sizes, well, I suggest to be bayesian. The core of the Bayesian theorem is that
+
+Bayes allows you to:
+
+-   simulate data given your model;
+
+-   include prior ecological knowledge on the model's parameters values: what is it probable, possible or unreasonable?;
+
+-   clearly see the assumptions and mechanisms in your model: what diﬀerent parameter values do to the model's outcomes;
+
+-   do the great partial pooling;
+
+-   make claims like: "there is 30% +- 10 % probability that the treatment improve the outcome".
+
+What else do you want ?
 
 ## References

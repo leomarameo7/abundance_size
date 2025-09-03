@@ -362,7 +362,7 @@ write.csv(m3, here("data","processed","m3.csv"))
 
 ```
 
-### From length to dry weight 
+### From length to dry weight
 
 Please refer to this [pubblication](https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/ecy.70050) and this <https://github.com/jswesner/get_neon_body_sizes>
 
