@@ -386,14 +386,41 @@ m4 <- m3|> select(-taxon_lowest) |>
 Extract unique combination of order - family
 
 ```{r}
+library(dplyr)
+library(readr)
+library(here)
 
+# Load coefficient datasets
+coeff_sol <- read_csv(here("data","raw","lw","sohlstrom.csv"))
+coeff_pom_raw <- read_csv(here("data","raw","lw","LW_coeffs.csv"))
+
+# Unique family levels
+levels_m4 <- unique(m4$family)
+levels_sol <- unique(coeff_sol$family)
+levels_pom <- unique(coeff_pom_raw$family)
+
+# Total families in m4
+total_m4 <- length(levels_m4)
+
+# Count matches
+matches_sol <- length(intersect(levels_m4, levels_sol))
+matches_pom <- length(intersect(levels_m4, levels_pom))
+
+# Print results
+cat("Total number of families in m4:", total_m4, "\n")
+cat("Number of m4 families present in coeff_sol:", matches_sol, "\n")
+cat("Number of m4 families present in coeff_pom_raw:", matches_pom, "\n")
 ```
 
 Please refer to this [pubblication](https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/ecy.70050) and this <https://github.com/jswesner/get_neon_body_sizes>
 
+```{r}
+
+```
+
 ## Terrestrial arthropods
 
-This data was collected by Ph.D student Valentin Moser and Master students in 2021 and 2022 within 16 different streams in Switzerland. They sampled terrestrial arthropods by using a 5 x 1 m plot located one meter from the stream's edge in the centre of the beaver pool and control area. Within each plot, they sampled the arthropods at the two ends of the 5 x 1 m plot in cylindrical baskets (50 cm diameter, 67 cm height, woven fabric) using suction sampling on a sunny day between 10:00-17:00 during peak arthropod activity. The samples were stored in ethanol, individuals were counted, measured and identified to order level with the help of a binocular.
+This data was collected by Ph.D student Valentin Moser and Master students in 2021 and 2022 within 16 different streams in Switzerland. They sampled terrestrial arthropods by using a 5 x 1 m plot located one meter from the stream's edge in the center of the beaver pool and control area. Within each plot, they sampled the arthropods at the two ends of the 5 x 1 m plot in cylindrical baskets (50 cm diameter, 67 cm height, woven fabric) using suction sampling on a sunny day between 10:00-17:00 during peak arthropod activity. The samples were stored in ethanol, individuals were counted, measured and identified to order level with the help of a binocular.
 
 ### Load raw data
 
