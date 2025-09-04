@@ -380,15 +380,13 @@ m3  |> filter(family != taxon_lowest)
 m4 <- m3|> select(-taxon_lowest) |> 
   # add method column 
   mutate(method = "kick_net") |> 
-  rename(  order  = taxon)
+  rename(  order  = taxon, 
+            length = size)
 ```
 
-Extract unique combination of order - family
+Extract unique combination of order - family and check how many families are there.
 
 ```{r}
-library(dplyr)
-library(readr)
-library(here)
 
 # Load coefficient datasets
 coeff_sol <- read_csv(here("data","raw","lw","sohlstrom.csv"))
