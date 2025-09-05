@@ -25,6 +25,7 @@ bibliography: references.bib
 ## Load packages
 
 ```{r load_libraries}
+
 library(tidyverse)
 library(here)
 library(knitr)
@@ -32,15 +33,34 @@ library(ggdist)
 library(readxl)
 ```
 
-## Flying arthropods
+```{r ggplot_theme}
+newtheme <- theme_bw(base_size = 14) 
+theme_set(newtheme)
+```
 
-We are going to load the raw data collected by Ph.D. student [Valentin Moser](https://www.wsl.ch/de/mitarbeitende/moserval/) and research assistants during June 2021 in **eight** different beaver dammed streams (@fig-moserflying). They have sampled in two locations: the main pond created by the beaver (i.e. `pool` factor level within the column `location`)) and 500 meters upstream of that pond (i.e. `control` factor level within the column `location`).
+## Introduction
+
+I am doing this notebook to help me and collaborators to understand which data we have and what is the clean / wrangle actions we should do before fitting the individual size distibution (ISD) model proposed by [@wesner2024]. We have sampled the arthropod community of Switzerland streams. We used three (3) different methods, catching different insect families and natural history. The three methods from now on we defined as: `emergent_trap`, `kick_net`, `suction`.
+
+Please remember the main questions of the research project:
+
+::: {.callout-important appearance="simple"}
+**Main questions:**
+
+\- Does beaver presence alter the arthropods ISD ? 
+
+\- To what extend does anthropogenic land area mediate beaver influence on arthropods ISD ?
+:::
+
+## Emergent arthropods
+
+We are going to load the raw data collected by Ph.D. student [Valentin Moser](https://www.wsl.ch/de/mitarbeitende/moserval/) and research assistants during June 2021 in **eight** different beaver dammed streams (@fig-moserflying) within the WSL-Eawag project: [Species interactions in beaver engineered habitats link land-water ecosystem processes](https://www.wsl.ch/de/projekte/sfsf/). They have sampled in two locations within each site: the main pond created by the beaver (i.e. `pool` factor level within the column `location`) and 500 meters upstream of that pond (i.e. `control` factor level within the column `location`).
 
 ![From Moser et al. 2025. Habitat heterogeneity and food availability in beaver-engineered streams foster bat richness, activity and feeding. *Journal of Animal Ecology*](images/RR_discussion.001-01.png){#fig-moserflying fig-align="center"}
 
 In the folder `data/raw` you will find: `data_arthropods_flying.xlsx`
 
-Flying arthropods were collected by traps like this one:
+Emergent arthropods were collected by emergent traps (surface area 0.25 $m^2$) covered with 500 $\mu m$ net. White collection containers installed on top of the pyramid-shaped trap facilitated the sampling of the arthropods with a self-made aspirator.
 
 [![Example of the trap used to collect flying arthropods. Dr. Cornelia Twining (Eawag) deploys the arthropods trap over the stream water surface. Click on the photo for the credits.](images/Lily_Trap.jpg){#fig-lily fig-align="center"}](https://www.limnologie.uni-konstanz.de/martin-creuzburg/members/academic-members/dr-cornelia-twining/)
 
@@ -50,7 +70,9 @@ Flying arthropods were collected by traps like this one:
 
 d <- readxl::read_xlsx(path = here("data", "raw","data_arthropods_flying.xlsx"), sheet = 1) |> 
 select(-c(sort, remarks))|> # remove unnecesary column
- filter( !is.na(size) ) # remvoe NAs observations
+ filter( !is.na(size) )|>  # remvoe NAs observations 
+rename(length = size)
+
 head(d)
 ```
 
@@ -63,7 +85,7 @@ data_dict <- data.frame(
   Column_name = c(
     "site", "location", "date", "class", "order", "suborder", "family",
     "subfamily", "juvenile", "terrestrial", "juv aquatic", "unusable",
-    "size", "remarks"
+    "length", "remarks"
   ),
   Explanation = c(
     "Study system in which the individual was sampled",
@@ -108,7 +130,7 @@ print(sort(families))
 
 Description of the families we have found:
 
-```{r}
+```{r list_families}
 # Families Found Near Streams in Switzerland
 
 families_table <- data.frame(
@@ -161,10 +183,10 @@ kable(families_table, caption = "Ecological roles of arthropod families sampled 
 
 ### Plot data
 
-```{r lot_histogram}
+```{r pot_histogram}
 
 # Alternative: side-by-side histogram (use 'dodge')
-ggplot(d, aes(x = size, fill = location)) +
+ggplot(d, aes(x = length, fill = location)) +
   geom_histogram(binwidth = 1, color = "black", alpha = 0.7, position = "dodge") +
   labs(
     title = "Histogram of individual sizes by sampled location",
@@ -175,7 +197,7 @@ ggplot(d, aes(x = size, fill = location)) +
   theme_bw(base_size = 14)
 
 # with stat halfeye
-ggplot(d, aes(y = location, x = size, fill = location)) +
+ggplot(d, aes(y = location, x = length, fill = location)) +
   stat_halfeye(position = "dodge",
     adjust = 1,       # smoothness of density
     width = 0.6,        # width of half-eye
@@ -192,7 +214,7 @@ ggplot(d, aes(y = location, x = size, fill = location)) +
 
 ```
 
-## Macrozoobethos
+## Macrozoobethos: kick net
 
 The macrozoobenthos data we are going to use was collected by Ph.D student [Valentin Moser](https://www.wsl.ch/de/mitarbeitende/moserval/) , UZH Master student [Dominic Tinner](https://dominictinner.pro) and Patrick Hofmann within the WSL-Eawag project: [Species interactions in beaver engineered habitats link land-water ecosystem processes](https://www.wsl.ch/de/projekte/sfsf/). They sampled 14 streams with beaver presence across Switzerland (@fig-tinner). The streams varied in surrounding landscape (open landscape or forest), beaver pond area, and stream ecomorphology, i.e., the structural stream characteristics.
 
@@ -227,7 +249,9 @@ Let's load the covariates/predictors we are interested in:
 ```{r site_info}
 # load site info 
 
-site_info <- read_csv(here("data", "raw" , "site_info.csv")) |> select (c(2:5,8,9,19,23)) |> select(-c(site, sample))
+site_info <- read_csv(here("data", "raw" , "site_info.csv")) |> 
+  select (c(2:5,8,9,19,23)) |> 
+  select(-c(site, sample))
 
 ```
 
@@ -272,7 +296,10 @@ m3 <- m2 %>%
   rename(location_old = location) %>%            # keep old column
   mutate(location = ifelse(location_old %in% c("Inflow", "Outflow", "Pool"),
                            "beaver",
-                           location_old))
+                           location_old)) |> # add method column 
+  mutate(method = "kick_net") |> 
+  rename(  order  = taxon, 
+            length = size)
 
 
 ```
@@ -286,8 +313,8 @@ h_std <- h %>%
 
 # plot
 ggplot(h_std, aes(x = site, y = human_influence_std)) +
-  geom_point(color = "steelblue", size = 3) +
-  theme_minimal() +
+  geom_point(color = "steelblue", size = 3, shape = 21) +
+geom_hline(yintercept = 0)+
   labs(
     title = "Standardised Human Influence by Site",
     x = "Site",
@@ -304,7 +331,7 @@ The sites with above-average human influence (\> 0) are: `r paste(h_std %>% filt
 ```{r plot_macro}
 
 # Alternative: side-by-side histogram (use 'dodge')
-ggplot(m3, aes(x = size, fill = location)) +
+ggplot(m3, aes(x = length, fill = location)) +
   geom_histogram(binwidth = 1, color = "black", alpha = 0.7, position = "dodge") +
   labs(
     title = "Histogram of individual sizes by sampled location",
@@ -318,13 +345,13 @@ stats <- m3 %>%
   group_by(location) %>%
   summarise(
     n = n(),
-    mean_size = mean(size, na.rm = TRUE),
-    sd_size = sd(size, na.rm = TRUE),
-    median_size = median(size, na.rm = TRUE)
+    mean_size = mean(length, na.rm = TRUE),
+    sd_size = sd(length, na.rm = TRUE),
+    median_size = median(length, na.rm = TRUE)
   )
 
 # with stat halfeye
-ggplot(m3, aes(y = location, x = size, fill = location)) +
+ggplot(m3, aes(y = location, x = length, fill = location)) +
   stat_halfeye(
     position = "dodge",
     adjust = 1.1,       
@@ -367,7 +394,7 @@ write.csv(m3, here( "data","processed", "m3.csv"  ))
 
 We are going to estimate arthropod's body mass as J. Pomeranz using taxon-­specific published length-­ weight regressions [@pomeranz2022]. Note that ISD relationships are sensitive to the under sampling of small body sizes. [@perkins2018] sampled benthic macroinvertebrates using comparable methods and found that body sizes smaller than 0.0026 mg were under sampled. Therefore, we will set the minimum body size to 0.0026 mg estimated dry weight before estimating ISD relationships to avoid the under sam- pling of small body sizes.
 
-Load processed data
+#### Load processed data
 
 ```{r load_processed_macrozoobenthos}
 
@@ -377,11 +404,7 @@ m3  |> filter(family != taxon_lowest)
 
 # since there are no difference between the two columns, we remove one of them 
 
-m4 <- m3|> select(-taxon_lowest) |> 
-  # add method column 
-  mutate(method = "kick_net") |> 
-  rename(  order  = taxon, 
-            length = size)
+m4 <- m3|> select(-taxon_lowest) 
 ```
 
 Extract unique combination of order - family and check how many families are there.
@@ -416,7 +439,7 @@ Please refer to this [pubblication](https://esajournals.onlinelibrary.wiley.com/
 
 ```
 
-## Terrestrial arthropods
+## Terrestrial arthropods: suction
 
 This data was collected by Ph.D student Valentin Moser and Master students in 2021 and 2022 within 16 different streams in Switzerland. They sampled terrestrial arthropods by using a 5 x 1 m plot located one meter from the stream's edge in the center of the beaver pool and control area. Within each plot, they sampled the arthropods at the two ends of the 5 x 1 m plot in cylindrical baskets (50 cm diameter, 67 cm height, woven fabric) using suction sampling on a sunny day between 10:00-17:00 during peak arthropod activity. The samples were stored in ethanol, individuals were counted, measured and identified to order level with the help of a binocular.
 
