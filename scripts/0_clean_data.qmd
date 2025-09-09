@@ -20,6 +20,7 @@ editor: visual
 editor_options: 
   chunk_output_type: console
 bibliography: references.bib
+csl: eco_lett.csl
 ---
 
 ## Load packages
@@ -31,6 +32,7 @@ library(here)
 library(knitr)
 library(ggdist)
 library(readxl)
+library(DT)
 ```
 
 ```{r ggplot_theme}
@@ -40,7 +42,7 @@ theme_set(newtheme)
 
 ## Introduction
 
-I am doing this notebook to help me and collaborators to understand which data we have and what is the clean / wrangle actions we should do before fitting the individual size distibution (ISD) model proposed by [@wesner2024]. We have sampled the arthropod community of Switzerland streams. We used three (3) different methods, catching different insect families and natural history. The three methods from now on we defined as: `emergent_trap`, `kick_net`, `suction`.
+I am doing this notebook to help me and collaborators to understand which data we have and what is the clean / wrangle actions we should do before fitting the individual size distibution (ISD) model proposed by [@wesner2024]. We have sampled the arthropod community of Switzerland streams. We used three (3) different methods, catching different insect taxon. The three methods from now on we defined as: `emergent_trap`, `kick_net`, `suction`.
 
 Please remember the main questions of the research project:
 
@@ -224,7 +226,9 @@ In each stream, four distinct locations were sampled: the lotic-lentic transitio
 
 ![Schematic overview of the study design. This illustration depicts the arrangement of sample locations in relation to the beaver dam across the studied streams. Control reaches were set either 500 m upstream of the inflow or 500 m downstream of the outflow, with an equal distributioon of upstream and downstream control reaches across the 16 studied streams. Each sample location was sampled four time consecutively, each focusing on different microhabitats. Additionally, light blue stream colour denotes lotic (fast-flowing) conditions, while dark blue represents the lentic (standing water) conditions in ponds, signifying typical stream current velocity. Credits and copyrights to Dominic Tinner.](images/tinner_fig_2.png){#fig-tinner2 fig-align="center"}
 
-The aquatic invertebrate sampling was conducted in May/June of 2021 or 2022 with the [kick-net method](https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.bafu.admin.ch/dam/bafu/de/dokumente/wasser/uv-umwelt-vollzug/methoden-zur-untersuchung-und-beurteilung-der-fliessgewaesser.pdf.download.pdf/methoden-zur-untersuchung-und-beurteilung-der-fliessgewaesser.pdf&ved=2ahUKEwiBh4fwuKiPAxVa1wIHHTt2NdoQFnoECBYQAQ&usg=AOvVaw1P_RymaemFv9YDq0ukSA8Z). During kick-net sampling, the collector kicks up the sediment in a 0.25 x 0.25 meter area of the stream for 20 seconds while a net is placed downstream of the sampling area to collect swirled-up invertebrates. Each sample location (e.g. inflow) was sampled four times consecutively to capture different microhabitats, with two samples in organic substrates (e.g., submerged macrophytes, roots) and two samples in non-organic substrates (e.g., gravel, sand). The content of the net was then transferred to plastic tubs, where aquatic invertebrates were picked out by hand for a duration of 15 minutes. After this time, the remaining content was washed in the stream (similar to gold panning), leaving only fine sediment with remaining individuals. This was stored together with the picked-out invertebrates in \[97% ethanol. The sampling in each stream was completed within one day, moving upstream to avoid impacting subsequent samples.
+The aquatic invertebrate sampling was conducted in May/June of 2021 or 2022 with the [kick-net method](https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.bafu.admin.ch/dam/bafu/de/dokumente/wasser/uv-umwelt-vollzug/methoden-zur-untersuchung-und-beurteilung-der-fliessgewaesser.pdf.download.pdf/methoden-zur-untersuchung-und-beurteilung-der-fliessgewaesser.pdf&ved=2ahUKEwiBh4fwuKiPAxVa1wIHHTt2NdoQFnoECBYQAQ&usg=AOvVaw1P_RymaemFv9YDq0ukSA8Z) (@fig-kicknet). During kick-net sampling, the collector kicks up the sediment in a 0.25 x 0.25 meter area of the stream for 20 seconds while a net is placed downstream of the sampling area to collect swirled-up invertebrates. Each sample location (e.g. inflow) was sampled four times consecutively to capture different microhabitats, with two samples in organic substrates (e.g., submerged macrophytes, roots) and two samples in non-organic substrates (e.g., gravel, sand). The content of the net was then transferred to plastic tubs, where aquatic invertebrates were picked out by hand for a duration of 15 minutes. After this time, the remaining content was washed in the stream (similar to gold panning), leaving only fine sediment with remaining individuals. This was stored together with the picked-out invertebrates in \[97% ethanol. The sampling in each stream was completed within one day, moving upstream to avoid impacting subsequent samples.
+
+[![Dominic Tinner collecting invertebrates by the kick net method. Domin Tinner credits.](images/kicknet_tinner.jpeg){#fig-kicknet}](https://umwelt.tg.ch/public/upload/assets/173800/3_Lebendiger%20Dorfbach_Dominic%20Tinner.pdf?fp=1)
 
 ### Predictors:
 
@@ -392,7 +396,11 @@ write.csv(m3, here( "data","processed", "m3.csv"  ))
 
 ### From length to dry weight
 
-We are going to estimate arthropod's body mass as J. Pomeranz using taxon-­specific published length-­ weight regressions [@pomeranz2022]. Note that ISD relationships are sensitive to the under sampling of small body sizes. [@perkins2018] sampled benthic macroinvertebrates using comparable methods and found that body sizes smaller than 0.0026 mg were under sampled. Therefore, we will set the minimum body size to 0.0026 mg estimated dry weight before estimating ISD relationships to avoid the under sam- pling of small body sizes.
+We are going to estimate arthropod's body mass using taxon-­specific published length-­ weight regressions. But first let's check which families are there !
+
+::: callout-note
+Note that ISD relationships are sensitive to the under sampling of small body sizes. [@perkins2018] sampled benthic macroinvertebrates using comparable methods and found that body sizes smaller than 0.0026 mg were under sampled. Therefore, you should find and set the minimum invertebrate body size before estimating ISD relationships to avoid the under sampling of small body sizes.
+:::
 
 #### Load processed data
 
@@ -407,47 +415,166 @@ m3  |> filter(family != taxon_lowest)
 m4 <- m3|> select(-taxon_lowest) 
 ```
 
+#### How many families are there?
+
 Extract unique combination of order - family and check how many families are there.
 
-```{r}
-
-# Load coefficient datasets
-coeff_sol <- read_csv(here("data","raw","lw","sohlstrom.csv"))
-coeff_pom_raw <- read_csv(here("data","raw","lw","LW_coeffs.csv"))
+```{r howmanyfamilies}
 
 # Unique family levels
 levels_m4 <- unique(m4$family)
-levels_sol <- unique(coeff_sol$family)
-levels_pom <- unique(coeff_pom_raw$family)
 
 # Total families in m4
 total_m4 <- length(levels_m4)
 
-# Count matches
+# Print results
+cat("Total number of families in m4:", total_m4, "\n")
+
+```
+
+```{r table_families_kicknet}
+
+families <- tibble::tibble(
+  No = 1:76,
+  Family = c(
+    "Rhyacophilidae","Hydropsychidae","Sericostomatidae","Goeridae","Ephemerellidae",
+    "Baetidae","Simuliidae","Chironomidae","Gammaridae","Psychodidae","Hydracarina",
+    "Hydrobiidae","Elmidae","Curculionidae","Ephemeridae","Caenidae","Limoniidae",
+    "Ceratopogonidae","Athericidae","Hydroptilidae","Leuctridae","Corixidae",
+    "Asellidae","Calopterygidae","Sphaeriidae","Physidae","Lymnaeidae","Dixidae",
+    "Dytiscidae","Haliplidae","Tipulidae","Cordulegastridae","Leptophlebiidae",
+    "Planorbidae","Aeshnidae","Culicidae","Coenagrionidae","Bithyniidae","Heptageniidae",
+    "Polycentropodidae","Limnephilidae","Odontoceridae","Dugesiidae","Scirtidae",
+    "Nemouridae","Lepidostomatidae","Libellulidae","Gerridae","Glossiphoniidae",
+    "Gomphidae","Veliidae","Erpobdellidae","Stratiomyidae","Leptoceridae","Tabanidae",
+    "Anthomyiidae","Notonectidae","Pleidae","Sialidae","Lestidae","Brachycentridae",
+    "Hydrophilidae","Ancylidae","Empididae","Psychomyiidae","Astacidae","Hydraenidae",
+    "Syrphidae","Chrysomelidae","Platycnemididae","Chaoboridae","Dryopidae","Nepidae",
+    "Corduliidae","Naucoridae","Ecnomidae"
+  ),
+  Ecology = c(
+    "Free-living predatory caddisflies in fast streams",
+    "Net-spinning caddisflies, filter feeders in flowing water",
+    "Case-building caddisflies in cool streams",
+    "Case-building caddisflies on stony substrates",
+    "Mayflies, grazers in clean streams",
+    "Small mayflies, algal grazers, tolerant",
+    "Blackflies, filter feeders in running water",
+    "Midges, very diverse, sediment dwellers",
+    "Freshwater amphipods, shredders and detritivores",
+    "Drain flies, semi-aquatic in organic-rich habitats",
+    "Water mites, parasitic/predatory",
+    "Freshwater snails, grazers",
+    "Riffle beetles, scrapers in clean streams",
+    "Weevils, aquatic plant feeders",
+    "Burrowing mayflies in fine sediments",
+    "Small mayflies in slow waters",
+    "Crane flies, detritivores in moist soils and streams",
+    "Biting midges, some predatory",
+    "Snipe flies, predatory larvae",
+    "Micro-caddisflies, case-builders on vegetation",
+    "Stoneflies, shredders in streams",
+    "Water boatmen, omnivorous swimmers",
+    "Aquatic isopods, detritivores",
+    "Damselflies, predatory larvae in streams",
+    "Small freshwater bivalves, filter feeders",
+    "Pond snails, grazers in lentic habitats",
+    "Pond snails, algae grazers",
+    "Phantom midges, larvae in still waters",
+    "Predaceous diving beetles, active predators",
+    "Crawling water beetles, algal grazers",
+    "Crane flies, detritivores in sediments",
+    "Dragonflies, predatory nymphs in streams",
+    "Mayflies, sprawlers on rocks",
+    "Ramshorn snails, algal grazers",
+    "Dragonflies, strong predatory larvae",
+    "Mosquitoes, larvae filter feed in still water",
+    "Damselflies, predatory larvae in vegetation",
+    "Small snails, grazers",
+    "Mayflies, flattened scrapers in riffles",
+    "Caddisflies, case-building predators",
+    "Caddisflies, detritivores/shredders",
+    "Caddisflies, case-builders with sand/gravel",
+    "Flatworms, predators/scavengers",
+    "Marsh beetles, algal feeders",
+    "Stoneflies, shredders in cool streams",
+    "Caddisflies, case-builders in clean water",
+    "Dragonflies, predatory larvae",
+    "Water striders, surface predators",
+    "Leeches, ectoparasites",
+    "Dragonflies, burrowing predators",
+    "Small water striders, predators",
+    "Leeches, predatory scavengers",
+    "Soldier flies, detritivores",
+    "Long-horned caddisflies, case-building larvae",
+    "Horse flies, predatory larvae",
+    "Root maggots, detritivores",
+    "Backswimmers, predatory insects",
+    "Small backswimmers, predators",
+    "Alderflies, predatory larvae",
+    "Damselflies, predatory larvae",
+    "Caddisflies, case-builders, detritivores",
+    "Water scavenger beetles, omnivores",
+    "Freshwater limpets, grazers",
+    "Dance flies, predatory larvae",
+    "Caddisflies, tube-building filter feeders",
+    "Crayfish, omnivorous benthic crustaceans",
+    "Minute aquatic beetles, scrapers",
+    "Hoverflies, some aquatic detritivores",
+    "Leaf beetles, plant feeders",
+    "Damselflies, predatory larvae",
+    "Phantom midges, predatory larvae",
+    "Whirligig beetles, surface predators",
+    "Water scorpions, ambush predators",
+    "Dragonflies, predatory larvae",
+    "Creeping water bugs, predators",
+    "Caddisflies, case-building detritivores"
+  )
+)
+
+# interactive sortable table with cross-reference
+datatable(
+  families,
+  options = list(pageLength = 15, autoWidth = TRUE),
+  caption = htmltools::tags$caption(
+    style = 'caption-side: top; text-align: left;',
+    'Table: ', htmltools::tags$strong('Kick-net invertebrate families and their ecology'),
+    id = "tbl-tablekicknet"
+  )
+)
+```
+
+Now we are going some length-weight allometric regression coefficients from [@pomeranz2022] and [@sohlström2018]
+
+```{r loadallometriccoeff}
+# Load coefficient datasets
+coeff_sol <- read_csv(here("data","raw","lw","sohlstrom.csv")) # Sohlström et al. 2018 Ecology and Evolution  10.1002/ece3.4702
+coeff_pom_raw <- read_csv(here("data","raw","lw","LW_coeffs.csv")) # Pomeranz et al. 2021 Glob Change BIology  10.1111/gcb.15862
+
+levels_sol <- unique(coeff_sol$family)
+levels_pom <- unique(coeff_pom_raw$family)
+
+# Count matches with our dataframe m4 
 matches_sol <- length(intersect(levels_m4, levels_sol))
 matches_pom <- length(intersect(levels_m4, levels_pom))
 
-# Print results
-cat("Total number of families in m4:", total_m4, "\n")
-cat("Number of m4 families present in coeff_sol:", matches_sol, "\n")
-cat("Number of m4 families present in coeff_pom_raw:", matches_pom, "\n")
-```
-
-Please refer to this [pubblication](https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/ecy.70050) and this <https://github.com/jswesner/get_neon_body_sizes>
-
-```{r}
-
+cat("Number of m4 families present in Sohlström et al. 2018:", matches_sol, "\n")
+cat("Number of m4 families present in Pomeranz et al. 2022:", matches_pom, "\n")
 ```
 
 ## Terrestrial arthropods: suction
 
-This data was collected by Ph.D student Valentin Moser and Master students in 2021 and 2022 within 16 different streams in Switzerland. They sampled terrestrial arthropods by using a 5 x 1 m plot located one meter from the stream's edge in the center of the beaver pool and control area. Within each plot, they sampled the arthropods at the two ends of the 5 x 1 m plot in cylindrical baskets (50 cm diameter, 67 cm height, woven fabric) using suction sampling on a sunny day between 10:00-17:00 during peak arthropod activity. The samples were stored in ethanol, individuals were counted, measured and identified to order level with the help of a binocular.
+This data was collected by Ph.D student Valentin Moser and Master students in 2021 and 2022 within 16 different streams in Switzerland. In each stream they sampled in 4 locations: `control`, `inflow`, `pool`, `outflow`. They sampled terrestrial arthropods by using a 5 x 1 m plots located at three diffferent poits: one meter from the stream's edge (1), at 2 times the pool width distance (2) and 3 times the pool width distance (3) @fig-suctiondesign. Within each plot, they sampled the arthropods at the two ends of the 5 x 1 m plot in cylindrical baskets (50 cm diameter, 67 cm height, woven fabric) using suction sampling on a sunny day between 10:00-17:00 during peak arthropod activity @fig-suction. The samples were stored in ethanol, individuals were counted, measured and identified to order level with the help of a binocular.
+
+![Sampling design for terrestrial arthropods sampling. This figure was adapted from Valentin Moser et al. 2025 J. Animal Ecology](images/sampling_design_suction_method.png){#fig-suctiondesign}
+
+[![Example of suction sampling method for arthropods. Foto credit: Helbing et al. 2020. https://onlinelibrary.wiley.com/doi/10.1111/eea.12952](images/sucmethod.jpg){#fig-suction width="938"}](https://onlinelibrary.wiley.com/doi/10.1111/eea.12952)
 
 ### Load raw data
 
 ```{r load_terrestrial_art_data}
 
-t21 = readxl::read_xlsx(path = here("data", "raw","data_arthropods_terrestrial_2021.xlsx"), sheet = 1) |> mutate(year = 2021) |> rename(laufnummer = Laufnummer) |> select(-c(remarks,adult))
+t21 = readxl::read_xlsx(path = here("data", "raw","data_arthropods_terrestrial_2021.xlsx"), sheet = 1) |> mutate(year = 2021) |> rename(laufnummer = Laufnummer, length = size) |> select(-c(remarks,adult))
 # load site info 
 
 site_info <- read_csv(here("data", "raw" , "site_info.csv")) |> select (c(2:5,8,9,19,23)) 
@@ -456,10 +583,67 @@ intersect(names(t21), names(site_info))
 # meerge site info to t21 df 
 t21_merged <- t21 %>%
   left_join(site_info, by = "laufnummer") |> 
-  select(latitude_sample, longitude_sample,laufnummer, year, site, sample,location, ecomorphology, area_pool, everything())
+  select(year, site, sample,location, samples_replicate, ecomorphology, area_pool, "class","order","suborder","family","length" )
 
 # To see rows with NA in size
-t21_merged %>% filter(is.na(size))
+t2 <-  t21_merged %>% filter(!is.na(length))
+```
+
+We are going to sub-sample the first and second point, close to the stream .
+
+```{r subsample}
+
+t3 <- t2 |> filter(str_detect(sample, "_(1|2)$")) |> mutate(location = if_else(location == "Control", "Control", "beaver_influenced"))
+
+```
+
+```{r summery_stats}
+# calculate summary stats
+stats <- t3 %>%
+  group_by(location) %>%
+  summarise(
+    n = n(),
+    mean = mean(length, na.rm = TRUE),
+    sd = sd(length, na.rm = TRUE),
+    median = median(length, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    label = paste0("n=", n, 
+                   "\nmean=", round(mean, 2),
+                   "\nsd=", round(sd, 2),
+                   "\nmedian=", round(median, 2))
+  )
+```
+
+### Visualize 
+
+```{r terr_visualize}
+
+ggplot(t3, aes(y = location, x = length, fill = location)) +
+  stat_halfeye(
+    position = "dodge",
+    adjust = 0.2,
+    width = 1.5,
+    justification = -0.1,
+    point_interval = mean_qi,
+    alpha = 0.7
+  ) +
+  geom_text(
+    data = stats,
+    aes(x = max(t3$length) * .75,   # place text to the right of distributions
+        y = location,
+        label = label),
+    inherit.aes = FALSE,
+    hjust = 0
+  ) +
+  labs(
+    title = "Size Distributions by Location",
+    subtitle = "Note that outflow , inflow and pool locations are defined as beaver_influenced",
+    y = "",
+    x = "Size (mm)"
+  )
+
 ```
 
 ### Remove NAs
