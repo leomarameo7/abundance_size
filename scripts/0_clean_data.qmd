@@ -42,17 +42,17 @@ theme_set(newtheme)
 
 ## Introduction
 
-I am doing this notebook to help me and collaborators to understand which data we have and what is the clean / wrangle actions we should do before fitting the individual size distibution (ISD) model proposed by [@wesner2024]. We have sampled the arthropod community of Switzerland streams. We used three (3) different methods, catching different insect taxon. The three methods from now on we defined as: `emergent_trap`, `kick_net`, `suction`.
-
-Please remember the main questions of the research project:
+I am doing this notebook to help me and collaborators to understand which data we have and what is the clean / wrangle actions we should do before fitting the individual size distribution (ISD) model proposed by [@wesner2024] to answer these questions:
 
 ::: {.callout-important appearance="simple"}
 **Main questions:**
 
-\- Does beaver presence alter the arthropods ISD ? 
+\- Does beaver presence alter arthropods ISD ? 
 
 \- To what extend does anthropogenic land area mediate beaver influence on arthropods ISD ?
 :::
+
+We have sampled the arthropod community of Switzerland streams. We used three (3) different methods, catching different insect taxon. The three methods from now on we defined as: `emergent_trap`, `kick_net`, `suction`.
 
 ## Emergent arthropods
 
@@ -62,7 +62,7 @@ We are going to load the raw data collected by Ph.D. student [Valentin Moser](ht
 
 In the folder `data/raw` you will find: `data_arthropods_flying.xlsx`
 
-Emergent arthropods were collected by emergent traps (surface area 0.25 $m^2$) covered with 500 $\mu m$ net. White collection containers installed on top of the pyramid-shaped trap facilitated the sampling of the arthropods with a self-made aspirator.
+Emergent arthropods were collected by emergent traps (surface area 0.25 $m^2$) covered with 500 $\mu m$ net during 10 days.
 
 [![Example of the trap used to collect flying arthropods. Dr. Cornelia Twining (Eawag) deploys the arthropods trap over the stream water surface. Click on the photo for the credits.](images/Lily_Trap.jpg){#fig-lily fig-align="center"}](https://www.limnologie.uni-konstanz.de/martin-creuzburg/members/academic-members/dr-cornelia-twining/)
 
@@ -191,7 +191,7 @@ kable(families_table, caption = "Ecological roles of arthropod families sampled 
 ggplot(d, aes(x = length, fill = location)) +
   geom_histogram(binwidth = 1, color = "black", alpha = 0.7, position = "dodge") +
   labs(
-    title = "Histogram of individual sizes by sampled location",
+    title = "Histogram of individual sizes by sampled location (emergent trap)",
     x = "Size (mm)",
     y = "Frequency",
     fill = "Location"
@@ -208,7 +208,7 @@ ggplot(d, aes(y = location, x = length, fill = location)) +
     alpha = 0.7
   ) +
   labs(
-    title = "Size Distributions by Location",
+    title = "Size Distributions by Location (emergent trap)",
     y = "Location",
     x = "Size (mm)"
   ) +
@@ -338,7 +338,7 @@ The sites with above-average human influence (\> 0) are: `r paste(h_std %>% filt
 ggplot(m3, aes(x = length, fill = location)) +
   geom_histogram(binwidth = 1, color = "black", alpha = 0.7, position = "dodge") +
   labs(
-    title = "Histogram of individual sizes by sampled location",
+    title = "Histogram of individual sizes by sampled location (kick net method)",
     x = "Size (mm)",
     y = "Frequency",
     fill = "Location"
@@ -378,7 +378,7 @@ ggplot(m3, aes(y = location, x = length, fill = location)) +
     size = 3.5
   ) +
   labs(
-    title = "Size Distributions by Location",
+    title = "Size Distributions by Location (kick net method)",
     y = "Location",
     x = "Size (mm)"
   ) +
@@ -412,7 +412,7 @@ m3  |> filter(family != taxon_lowest)
 
 # since there are no difference between the two columns, we remove one of them 
 
-m4 <- m3|> select(-taxon_lowest) 
+m4 <- m3|> select(-taxon_lowest, -laufnummer) 
 ```
 
 #### How many families are there?
@@ -564,7 +564,7 @@ cat("Number of m4 families present in Pomeranz et al. 2022:", matches_pom, "\n")
 
 ## Terrestrial arthropods: suction
 
-This data was collected by Ph.D student Valentin Moser and Master students in 2021 and 2022 within 16 different streams in Switzerland. In each stream they sampled in 4 locations: `control`, `inflow`, `pool`, `outflow`. They sampled terrestrial arthropods by using a 5 x 1 m plots located at three diffferent poits: one meter from the stream's edge (1), at 2 times the pool width distance (2) and 3 times the pool width distance (3) @fig-suctiondesign. Within each plot, they sampled the arthropods at the two ends of the 5 x 1 m plot in cylindrical baskets (50 cm diameter, 67 cm height, woven fabric) using suction sampling on a sunny day between 10:00-17:00 during peak arthropod activity @fig-suction. The samples were stored in ethanol, individuals were counted, measured and identified to order level with the help of a binocular.
+This data was collected by Ph.D student Valentin Moser and Master students in 2021 and 2022 within 16 different streams in Switzerland. In each stream they sampled in 4 locations: `control`, `inflow`, `pool`, `outflow`. They sampled terrestrial arthropods by using a 5 x 1 m plots located at three different positions: one meter from the stream's edge (1), at 2 times the pool width distance (2) and 3 times the pool width distance (3) (i.e.,orange points in @fig-suctiondesign. Within each plot, they sampled the arthropods at the two ends of the 5 x 1 m plot in cylindrical baskets (50 cm diameter, 67 cm height, woven fabric) using suction sampling on a sunny day between 10:00-17:00 during peak arthropod activity @fig-suction. The samples were stored in ethanol, individuals were counted, measured and identified to order level with the help of a binocular.
 
 ![Sampling design for terrestrial arthropods sampling. This figure was adapted from Valentin Moser et al. 2025 J. Animal Ecology](images/sampling_design_suction_method.png){#fig-suctiondesign}
 
@@ -589,7 +589,7 @@ t21_merged <- t21 %>%
 t2 <-  t21_merged %>% filter(!is.na(length))
 ```
 
-We are going to sub-sample the first and second point, close to the stream .
+We are going to sub-sample the first and second sampled positions. That ones that are influenced by beaver damming.
 
 ```{r subsample}
 
@@ -616,14 +616,14 @@ stats <- t3 %>%
   )
 ```
 
-### Visualize 
+### Visualize
 
 ```{r terr_visualize}
 
 ggplot(t3, aes(y = location, x = length, fill = location)) +
   stat_halfeye(
     position = "dodge",
-    adjust = 0.2,
+    adjust = 10,
     width = 1.5,
     justification = -0.1,
     point_interval = mean_qi,
@@ -631,21 +631,74 @@ ggplot(t3, aes(y = location, x = length, fill = location)) +
   ) +
   geom_text(
     data = stats,
-    aes(x = max(t3$length) * .75,   # place text to the right of distributions
+    aes(x = max(t3$length) * .25,   # place text to the right of distributions
         y = location,
         label = label),
     inherit.aes = FALSE,
     hjust = 0
   ) +
   labs(
-    title = "Size Distributions by Location",
+    title = "Size Distributions by Location (suction method)",
     subtitle = "Note that outflow , inflow and pool locations are defined as beaver_influenced",
     y = "",
     x = "Size (mm)"
-  )
+  )+
+  scale_x_continuous(limits = c(0,20), breaks = seq(0,20,1))
 
 ```
 
-### Remove NAs
+```{r histo}
+
+ggplot(t3, aes(x = length, fill = location)) +
+  geom_histogram(
+    binwidth = 1,
+    position = "identity",
+    alpha = 0.4,
+    color = "black"
+  ) +
+  labs(
+    title = "Size Distributions by Location for suction sampling",
+    subtitle = "Note that outflow, inflow and pool locations are defined as beaver_influenced",
+    y = "Count",
+    x = "Size (mm)"
+  )+
+  scale_x_continuous(limits = c(0,20), breaks = seq(0,20,1))
+
+```
+
+```{r geom_density}
+
+ggplot(t3, aes(x = length, fill = location)) +
+  geom_density(alpha = 0.4, adjust = 1 ) +
+  labs(
+    title = "Size Distributions by Location",
+    subtitle = "Note that outflow, inflow and pool locations are defined as beaver_influenced",
+    y = "Density",
+    x = "Size (mm)"
+  )+
+  scale_x_continuous(limits = c(0,20), breaks = seq(0,20,1))
+```
+
+## Conclusions
+
+::: callout-important
+-   Emergent trap method (aquatic-terrestrial invertebrates): we can standardize by the area sampled.
+
+    For Control, we have `r nrow(d[d$location == "Control", ])` observations, with a minimum length value = `r min(d$length[d$location == "Control"], na.rm = TRUE)` and a maximum length value = `r max(d$length[d$location == "Control"], na.rm = TRUE)`.
+
+    For beaver pond location, we have `r nrow(d[d$location == "Pool", ])` observations, with a minimum length value = `r min(d$length[d$location == "Pool"], na.rm = TRUE)` and a maximum length value = `r max(d$length[d$location == "Pool"], na.rm = TRUE)`.
+
+-   Kick net method (aquatic macroinvertebrates): we can not standardize by the area sampled.
+
+    For Control, we have `r nrow(m4[m4$location == "Control", ])` observations, with a minimum length value = `r min(m4$length[m4$location == "Control"], na.rm = TRUE)` and a maximum length value = `r max(m4$length[m4$location == "Control"], na.rm = TRUE)`.
+
+    For beaver influenced locations, we have `r nrow(m4[m4$location == "beaver", ])` observations, with a minimum length value = `r min(m4$length[m4$location == "beaver"], na.rm = TRUE)` and a maximum length value = `r max(m4$length[m4$location == "beaver"], na.rm = TRUE)`.
+
+-   Suction method (terrestrial invertebrates): we can not standardize by the area sampled.
+
+    For control, we have `r nrow(t3[t3$location == "Control", ])` observations with a minimum length value = `r min(t3$length[t3$location == "Control"], na.rm = TRUE)` and a maximum length value = `r max(t3$length[t3$location == "Control"], na.rm = TRUE)`.
+
+    For beaver-influenced locations, we have `r nrow(t3[t3$location == "beaver_influenced", ])` observations, with a minimum length value = `r min(t3$length[t3$location == "beaver_influenced"], na.rm = TRUE)` and a maximum length value = `r max(t3$length[t3$location == "beaver_influenced"], na.rm = TRUE)`.
+:::
 
 ## References
