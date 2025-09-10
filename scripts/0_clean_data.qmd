@@ -47,7 +47,7 @@ I am doing this notebook to help me and collaborators to understand which data w
 ::: {.callout-important appearance="simple"}
 **Main questions:**
 
-\- Does beaver presence alter arthropods ISD ? 
+\- Does beaver presence influence arthropods individual size distribution (ISD) ? 
 
 \- To what extend does anthropogenic land area mediate beaver influence on arthropods ISD ?
 :::
@@ -568,7 +568,9 @@ This data was collected by Ph.D student Valentin Moser and Master students in 20
 
 ![Sampling design for terrestrial arthropods sampling. This figure was adapted from Valentin Moser et al. 2025 J. Animal Ecology](images/sampling_design_suction_method.png){#fig-suctiondesign}
 
-[![Example of suction sampling method for arthropods. Foto credit: Helbing et al. 2020. https://onlinelibrary.wiley.com/doi/10.1111/eea.12952](images/sucmethod.jpg){#fig-suction width="938"}](https://onlinelibrary.wiley.com/doi/10.1111/eea.12952)
+S
+
+[![Suction sampling for arthropods. Foto credit: Valentin Moser.](images/succion_2.JPG){#fig-suction}](https://onlinelibrary.wiley.com/doi/10.1111/eea.12952)
 
 ### Load raw data
 
