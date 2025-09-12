@@ -141,4 +141,20 @@ If you are not willing to use the `isdbayes` package, you can use the `sizespect
 
 If you decide to use the `isdbayes` package, please read this README.rmd made by Wesner et al ([link](https://github.com/jswesner/isdbayes)).
 
+### Analysis 
+
+Jeff Wesner and J. Pomeranz
+
+-   Exclude emergent trap sampling
+
+-   Use `location` as predictor : 4 levels . And then make inference.
+
+-   Fix a body size cut off : waiting Jeff script
+
+-   
+
+### To do next
+
+-   
+
 ## References
