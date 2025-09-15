@@ -54,171 +54,9 @@ I am doing this notebook to help me and collaborators to understand which data w
 
 We have sampled the arthropod community of Switzerland streams. We used three (3) different methods, catching different insect taxon. The three methods from now on we defined as: `emergent_trap`, `kick_net`, `suction`.
 
-## Emergent arthropods
+## Kick net: aquatic invertebrates community
 
-We are going to load the raw data collected by Ph.D. student [Valentin Moser](https://www.wsl.ch/de/mitarbeitende/moserval/) and research assistants during June 2021 in **eight** different beaver dammed streams (@fig-moserflying) within the WSL-Eawag project: [Species interactions in beaver engineered habitats link land-water ecosystem processes](https://www.wsl.ch/de/projekte/sfsf/). They have sampled in two locations within each site: the main pond created by the beaver (i.e. `pool` factor level within the column `location`) and 500 meters upstream of that pond (i.e. `control` factor level within the column `location`).
-
-![From Moser et al. 2025. Habitat heterogeneity and food availability in beaver-engineered streams foster bat richness, activity and feeding. *Journal of Animal Ecology*](images/RR_discussion.001-01.png){#fig-moserflying fig-align="center"}
-
-In the folder `data/raw` you will find: `data_arthropods_flying.xlsx`
-
-Emergent arthropods were collected by emergent traps (surface area 0.25 $m^2$) covered with 500 $\mu m$ net during 10 days.
-
-[![Example of the trap used to collect flying arthropods. Dr. Cornelia Twining (Eawag) deploys the arthropods trap over the stream water surface. Click on the photo for the credits.](images/Lily_Trap.jpg){#fig-lily fig-align="center"}](https://www.limnologie.uni-konstanz.de/martin-creuzburg/members/academic-members/dr-cornelia-twining/)
-
-### Load raw data
-
-```{r load_raw_data}
-
-d <- readxl::read_xlsx(path = here("data", "raw","data_arthropods_flying.xlsx"), sheet = 1) |> 
-select(-c(sort, remarks))|> # remove unnecesary column
- filter( !is.na(size) )|>  # remvoe NAs observations 
-rename(length = size)
-
-head(d)
-```
-
-### Metadata:
-
-```{r metadata}
-
-
-data_dict <- data.frame(
-  Column_name = c(
-    "site", "location", "date", "class", "order", "suborder", "family",
-    "subfamily", "juvenile", "terrestrial", "juv aquatic", "unusable",
-    "length", "remarks"
-  ),
-  Explanation = c(
-    "Study system in which the individual was sampled",
-    "Site at which individual was sampled (i.e. pool or control)",
-    "Collection period during which the individual was sampled (i.e. June or July)",
-    "Taxonomic class the sampled individual belongs to",
-    "Taxonomic order the sampled individual belongs to",
-    "Taxonomic suborder the sampled individual belongs to (where available)",
-    "Taxonomic family the sampled individual belongs to (where available)",
-    "Taxonomic subfamily the sampled individual belongs to (where available)",
-    "Binary value indicating if the sampled individual was a juvenile. 1 = juvenile, 0 = adult",
-    "Binary value indicating if the sampled individual was winged. 1 = non-winged, 0 = winged",
-    "Binary value indicating if the sampled individual belongs to a taxa with purely aquatic juveniles. 1 = aquatic, 0 = not aquatic",
-    "Binary value indicating if the sampled individual came from water (amphipoda, gastropoda)",
-    "Length of the sampled individual in mm (rounded to full numbers). Measured from head to end of abdomen, excluding appendages (wings, limbs, antennae, cerci, etc.)",
-    "Additional comments or information about a given individual"
-  )
-)
-
-kable(data_dict, align = c("l","l"), caption = "Metadata for data_arthropods_flying.xlsx")
-
-```
-
-::: callout-note
-Question:
-
-How many taxa which ones are there?
-:::
-
-```{r get_unique_taxa_families}
-# Get unique families (excluding NA)
-families <- unique(na.omit(d$family))
-
-# Number of unique families
-num_families <- length(families)
-
-# Print results
-cat("Number of unique families:", num_families, "\n\n")
-cat("Families:\n")
-print(sort(families))
-```
-
-Description of the families we have found:
-
-```{r list_families}
-# Families Found Near Streams in Switzerland
-
-families_table <- data.frame(
-  Family = c(
-    "Aphidoidea", "Cantharidae", "Carabidae", "Chrysomelidae",
-    "Coccinellidae", "Cucujidae", "Curculionidae", "Dytiscidae",
-    "Elmidae", "Erebidae", "Forficulidae", "Formicidae",
-    "Gerridae", "Gyrinidae", "Haliplidae", "Hydrophilidae",
-    "Latridiidae", "Monotomidae", "Mordellidae", "Nitidulidae",
-    "Notonectidae", "Panorpidae", "Phalacridae", "Psylloidea",
-    "Scirtidae", "Staphylinidae", "Syrphidae", "Tabanidae",
-    "Vespidae"
-  ),
-  Description = c(
-    "Aphids; plant sap-feeders, often found on riparian vegetation.",
-    "Soldier beetles; predatory or nectar-feeding, common in meadows near water.",
-    "Ground beetles; many species are predators along stream banks.",
-    "Leaf beetles; herbivores on riparian plants.",
-    "Lady beetles; mostly aphid predators on vegetation.",
-    "Flat bark beetles; live under bark, sometimes in moist riparian wood.",
-    "Weevils; herbivores feeding on riparian plants and shrubs.",
-    "Predaceous diving beetles; aquatic predators in streams and ponds.",
-    "Riffle beetles; aquatic, live attached to stones in running water.",
-    "Tiger moths and relatives; larvae feed on diverse plants near water.",
-    "Earwigs; omnivores hiding under stones and wood along streams.",
-    "Ants; common in soils and vegetation along riparian zones.",
-    "Water striders; aquatic predators skating on water surfaces.",
-    "Whirligig beetles; fast swimmers on water surfaces in streams.",
-    "Crawling water beetles; small herbivorous beetles in shallow water.",
-    "Water scavenger beetles; aquatic or semi-aquatic scavengers.",
-    "Minute brown scavenger beetles; found in decaying plant matter.",
-    "Root-eating beetles; often associated with decaying wood.",
-    "Tumbling flower beetles; found on flowers near riparian habitats.",
-    "Sap beetles; feed on decaying fruit, fungi, and plant material.",
-    "Backswimmers; aquatic predators that swim upside down.",
-    "Scorpionflies; scavengers, often in damp shaded stream habitats.",
-    "Shining flower beetles; small pollen feeders.",
-    "Psyllids; plant sap-feeders, often on riparian trees and shrubs.",
-    "Marsh beetles; aquatic or semi-aquatic beetles in wetlands.",
-    "Rove beetles; very diverse predators and scavengers in moist habitats.",
-    "Hoverflies; larvae are aphid predators, adults visit flowers.",
-    "Horse flies; adults feed on blood or nectar, larvae in wet soils.",
-    "Wasps; diverse group of predators and parasitoids near water."
-  )
-)
-
-kable(families_table, caption = "Ecological roles of arthropod families sampled close to streams in Switzerland")
-
-```
-
-### Plot data
-
-```{r pot_histogram}
-
-# Alternative: side-by-side histogram (use 'dodge')
-ggplot(d, aes(x = length, fill = location)) +
-  geom_histogram(binwidth = 1, color = "black", alpha = 0.7, position = "dodge") +
-  labs(
-    title = "Histogram of individual sizes by sampled location (emergent trap)",
-    x = "Size (mm)",
-    y = "Frequency",
-    fill = "Location"
-  ) +
-  theme_bw(base_size = 14)
-
-# with stat halfeye
-ggplot(d, aes(y = location, x = length, fill = location)) +
-  stat_halfeye(position = "dodge",
-    adjust = 1,       # smoothness of density
-    width = 0.6,        # width of half-eye
-    justification = -0.1,
-    point_interval = mean_qi,  # show mean & 95% interval
-    alpha = 0.7
-  ) +
-  labs(
-    title = "Size Distributions by Location (emergent trap)",
-    y = "Location",
-    x = "Size (mm)"
-  ) +
-  theme_bw(base_size = 14)
-
-```
-
-## Macrozoobethos: kick net
-
-The macrozoobenthos data we are going to use was collected by Ph.D student [Valentin Moser](https://www.wsl.ch/de/mitarbeitende/moserval/) , UZH Master student [Dominic Tinner](https://dominictinner.pro) and Patrick Hofmann within the WSL-Eawag project: [Species interactions in beaver engineered habitats link land-water ecosystem processes](https://www.wsl.ch/de/projekte/sfsf/). They sampled 14 streams with beaver presence across Switzerland (@fig-tinner). The streams varied in surrounding landscape (open landscape or forest), beaver pond area, and stream ecomorphology, i.e., the structural stream characteristics.
+The aquatic invertebrates community was collected by Ph.D student [Valentin Moser](https://www.wsl.ch/de/mitarbeitende/moserval/) , UZH Master student [Dominic Tinner](https://dominictinner.pro) and Patrick Hofmann within the WSL-Eawag project: [Species interactions in beaver engineered habitats link land-water ecosystem processes](https://www.wsl.ch/de/projekte/sfsf/). They sampled 14 streams with beaver presence across Switzerland (@fig-tinner). The streams varied in surrounding land use intensity (urban, agricultural, or forest, see @sec-typo ) and stream ecomorphology, (i.e., the structural stream characteristics @sec-streamecomorpho ).
 
 ![Map of Switzerland showing the 16 sampled streams in the lowlands. Maps A and B show a more detailed visualization, focusing on streams in the western (A) and eastern (B) regions of the country. Streams sampled in 2021 are depicted red, in 2022 blue. Note that sites 15 and 16 were sampled but we lack the posterior in lab individual length estimation. Credits and copyrights to Dominic Tinner.](images/Tinner_figure_1.png){#fig-tinner fig-align="center"}
 
@@ -228,15 +66,15 @@ In each stream, four distinct locations were sampled: the lotic-lentic transitio
 
 The aquatic invertebrate sampling was conducted in May/June of 2021 or 2022 with the [kick-net method](https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.bafu.admin.ch/dam/bafu/de/dokumente/wasser/uv-umwelt-vollzug/methoden-zur-untersuchung-und-beurteilung-der-fliessgewaesser.pdf.download.pdf/methoden-zur-untersuchung-und-beurteilung-der-fliessgewaesser.pdf&ved=2ahUKEwiBh4fwuKiPAxVa1wIHHTt2NdoQFnoECBYQAQ&usg=AOvVaw1P_RymaemFv9YDq0ukSA8Z) (@fig-kicknet). During kick-net sampling, the collector kicks up the sediment in a 0.25 x 0.25 meter area of the stream for 20 seconds while a net is placed downstream of the sampling area to collect swirled-up invertebrates. Each sample location (e.g. inflow) was sampled four times consecutively to capture different microhabitats, with two samples in organic substrates (e.g., submerged macrophytes, roots) and two samples in non-organic substrates (e.g., gravel, sand). The content of the net was then transferred to plastic tubs, where aquatic invertebrates were picked out by hand for a duration of 15 minutes. After this time, the remaining content was washed in the stream (similar to gold panning), leaving only fine sediment with remaining individuals. This was stored together with the picked-out invertebrates in \[97% ethanol. The sampling in each stream was completed within one day, moving upstream to avoid impacting subsequent samples.
 
-[![Dominic Tinner collecting invertebrates by the kick net method. Domin Tinner credits.](images/kicknet_tinner.jpeg){#fig-kicknet}](https://umwelt.tg.ch/public/upload/assets/173800/3_Lebendiger%20Dorfbach_Dominic%20Tinner.pdf?fp=1)
+[![Dominic Tinner collecting aquatic invertebrates using the kick net method. Credits: Domin Tinner Productions.](images/kicknet_tinner.jpeg){#fig-kicknet}](https://umwelt.tg.ch/public/upload/assets/173800/3_Lebendiger%20Dorfbach_Dominic%20Tinner.pdf?fp=1)
 
 ### Predictors:
 
-#### Land use intensity
+#### Land use intensity {#sec-typo}
 
-Land-use intensity data for each study site were extracted by Valentin Moser from Geodienste.ch and swisstopo.admin.ch using ARCGIS (Pro v. 2.8, Esri Inc., 2021 und QGIS 3.40 'Bratislava' 2024). A radius of 250 meters was selected around the center of each Pool and Control to avoid overlap between paired sampling areas. A visual inspection of the data showed highly reliable classification for agricultural (e.g., crop fields, pastures, areas that farmers maintain for biodiversity) and natural (e.g., forests, riparian areas) land-use. Areas without classified land-use were very often urban areas and human infrastructure, such as streets, railways, and housing. Therefore, missing data was assigned to urban land-use. [V. Moser](valentin.moser@wsl.ch) averaged the sum of agricultural, urban, and natural land-use cover types per site across Pool and Control. Finally, we aggregate agricultural and urban land cover estimates into an overall human impact variable called `human_influence`**.**
+These variable express the soil area (square meters $m^2$ ) with specific use. Land-use intensity data for each site were extracted by Valentin Moser from Geodienste.ch and swisstopo.admin.ch using ARCGIS (Pro v. 2.8, Esri Inc., 2021 und QGIS 3.40 'Bratislava' 2024). A radius of 250 meters was selected around the center of each `Pool` and `Control` location. A visual inspection of the data showed highly reliable classification for agricultural (e.g., crop fields, pastures, areas that farmers maintain for biodiversity) and natural (e.g., forests, riparian areas) land-use. Areas without classified land-use were very often urban areas and human infrastructure, such as streets, railways, and housing. Therefore, missing data was assigned to urban land-use. [V. Moser](valentin.moser@wsl.ch) averaged the sum of agricultural, urban, and natural land-use cover types per site across `Pool` and `Control`. Finally, we aggregate agricultural and urban land cover estimates into an overall human impact variable called `human_influence`**.**
 
-#### Stream ecomorphology
+#### Stream ecomorphology {#sec-streamecomorpho}
 
 The classification of ecomorphology index considered factors such as riparian zone modifications and structural alterations of stream beds to provide an estimate of the degree of anthropogenic impact. The streams included in this study belonged to the first three of the five ecomorphology categories, ranging from near-natural (category level 1) to slightly impacted (2) and heavily impacted (3). The values for ecomorphology were retrieved for each stream from the Swiss Geoportal, specifically the map layer ‘Ecomorphology Level F – River reaches‘ ([link to access](https://www.geo.admin.ch/de/datensatz-27052021-wie-naturnah-sind-unsere-baeche-und-fluesse-oekomorphologie-stufe-f-bafu)).
 
@@ -279,7 +117,7 @@ h_unique <- h  |>
 
 ```
 
-Merge the human influence variable derived by V. Moser to the macrozoobenthos dataframe:
+Merge the `human influence` variable derived by V. Moser to the processed data frame:
 
 ```{r merge_hum_influence}
 
@@ -297,15 +135,10 @@ Now we are going to:
 ```{r recall_location_column}
 
 m3 <- m2 %>%
-  rename(location_old = location) %>%            # keep old column
-  mutate(location = ifelse(location_old %in% c("Inflow", "Outflow", "Pool"),
-                           "beaver",
-                           location_old)) |> # add method column 
+            
   mutate(method = "kick_net") |> 
   rename(  order  = taxon, 
             length = size)
-
-
 ```
 
 Plot the standardized human influence by site:
@@ -330,20 +163,9 @@ geom_hline(yintercept = 0)+
 
 The sites with above-average human influence (\> 0) are: `r paste(h_std %>% filter(human_influence_std > 0) %>% distinct(site) %>% pull(site), collapse = ", ")`.
 
-### Plot
+Now we are going to estimate median, mean, standard deviation and number of observations for each location.
 
-```{r plot_macro}
-
-# Alternative: side-by-side histogram (use 'dodge')
-ggplot(m3, aes(x = length, fill = location)) +
-  geom_histogram(binwidth = 1, color = "black", alpha = 0.7, position = "dodge") +
-  labs(
-    title = "Histogram of individual sizes by sampled location (kick net method)",
-    x = "Size (mm)",
-    y = "Frequency",
-    fill = "Location"
-  ) +
-  theme_bw(base_size = 14)
+```{r summarise }
 # Summarize stats per location
 stats <- m3 %>%
   group_by(location) %>%
@@ -353,37 +175,30 @@ stats <- m3 %>%
     sd_size = sd(length, na.rm = TRUE),
     median_size = median(length, na.rm = TRUE)
   )
+```
 
-# with stat halfeye
-ggplot(m3, aes(y = location, x = length, fill = location)) +
-  stat_halfeye(
-    position = "dodge",
-    adjust = 1.1,       
-    width = 0.6,        
-    justification = -0.1,
-    point_interval = mean_qi,  
-    alpha = 0.7
-  ) +
+### Plot
+
+```{r plot_macro}
+# Alternative: side-by-side histogram (use 'dodge')
+ggplot(m3, aes(x = length, fill = location)) +
+  geom_histogram(binwidth = 1, color = "black", alpha = 0.3, position = "dodge") +
+  labs(
+    title = "Histogram of arthropod ISD by location (kick net method)",
+    x = "Length (mm)",
+    y = "Frequency",
+    fill = "Location"
+  ) + 
   geom_text(
     data = stats,
     aes(
-      x = 20,                # fixed at 20 mm
-      y = location,          # map y to location
+      x = 35,                # fixed at 20 mm
+      y = 500,          # map y to location
       label = paste0("n=", n, "\nmean=", round(mean_size,1),
                      "\nsd=", round(sd_size,1),
                      "\nmedian=", round(median_size,1))
-    ),
-    inherit.aes = FALSE,
-    hjust = 0,
-    size = 3.5
-  ) +
-  labs(
-    title = "Size Distributions by Location (kick net method)",
-    y = "Location",
-    x = "Size (mm)"
-  ) +
-  theme_bw(base_size = 14)
-
+    ))+
+  facet_wrap(~location) 
 ```
 
 Save the data to `processed` folder
@@ -398,7 +213,7 @@ write.csv(m3, here( "data","processed", "m3.csv"  ))
 
 We are going to estimate arthropod's body mass using taxon-­specific published length-­ weight regressions. But first let's check which families are there !
 
-::: callout-note
+::: callout-important
 Note that ISD relationships are sensitive to the under sampling of small body sizes. [@perkins2018] sampled benthic macroinvertebrates using comparable methods and found that body sizes smaller than 0.0026 mg were under sampled. Therefore, you should find and set the minimum invertebrate body size before estimating ISD relationships to avoid the under sampling of small body sizes.
 :::
 
@@ -431,6 +246,8 @@ total_m4 <- length(levels_m4)
 cat("Total number of families in m4:", total_m4, "\n")
 
 ```
+
+Then we describe each family:
 
 ```{r table_families_kicknet}
 
@@ -544,12 +361,12 @@ datatable(
 )
 ```
 
-Now we are going some length-weight allometric regression coefficients from [@pomeranz2022] and [@sohlström2018]
+Now we are going to load length-weight regression coefficients from [@pomeranz2022], [@sohlström2018] and .
 
 ```{r loadallometriccoeff}
 # Load coefficient datasets
 coeff_sol <- read_csv(here("data","raw","lw","sohlstrom.csv")) # Sohlström et al. 2018 Ecology and Evolution  10.1002/ece3.4702
-coeff_pom_raw <- read_csv(here("data","raw","lw","LW_coeffs.csv")) # Pomeranz et al. 2021 Glob Change BIology  10.1111/gcb.15862
+coeff_pom_raw <- read_csv(here("data","raw","lw","pomeranz_2022.csv")) # Pomeranz et al. 2021 Glob Change BIology  10.1111/gcb.15862
 
 levels_sol <- unique(coeff_sol$family)
 levels_pom <- unique(coeff_pom_raw$family)
@@ -558,8 +375,16 @@ levels_pom <- unique(coeff_pom_raw$family)
 matches_sol <- length(intersect(levels_m4, levels_sol))
 matches_pom <- length(intersect(levels_m4, levels_pom))
 
-cat("Number of m4 families present in Sohlström et al. 2018:", matches_sol, "\n")
-cat("Number of m4 families present in Pomeranz et al. 2022:", matches_pom, "\n")
+cat("Number of observed arthropod families present in Sohlström et al. 2018:", matches_sol, "\n")
+cat("Number of observed arthropod families present in Pomeranz et al. 2022:", matches_pom, "\n")
+```
+
+```{r families_missing}
+# Families from m4 not in Pomeranz
+not_in_pom_m4 <- setdiff(levels_m4, levels_pom)
+
+cat("Families taxa that are present in our data frame but not in Pomeranz et al. 2022:\n")
+print(not_in_pom_m4)
 ```
 
 ## Terrestrial arthropods: suction
@@ -680,6 +505,168 @@ ggplot(t3, aes(x = length, fill = location)) +
   )+
   scale_x_continuous(limits = c(0,20), breaks = seq(0,20,1))
 ```
+
+## Emergent arthropods
+
+We are going to load the raw data collected by Ph.D. student [Valentin Moser](https://www.wsl.ch/de/mitarbeitende/moserval/) and research assistants during June 2021 in **eight** different beaver dammed streams (@fig-moserflying) within the WSL-Eawag project: [Species interactions in beaver engineered habitats link land-water ecosystem processes](https://www.wsl.ch/de/projekte/sfsf/). They have sampled in two locations within each site: the main pond created by the beaver (i.e. `pool` factor level within the column `location`) and 500 meters upstream of that pond (i.e. `control` factor level within the column `location`).
+
+![From Moser et al. 2025. Habitat heterogeneity and food availability in beaver-engineered streams foster bat richness, activity and feeding. Journal of Animal Ecology](images/RR_discussion.001-01.png){#fig-moserflying fig-align="center"}
+
+In the folder `data/raw` you will find: `data_arthropods_flying.xlsx`
+
+Emergent arthropods were collected by emergent traps (surface area 0.25 $m^2$) covered with 500 $\mu m$ net during 10 days.
+
+![Example of the trap used to collect flying arthropods. Dr. Cornelia Twining (Eawag) deploys the arthropods trap over the stream water surface. Click on the photo for the credits.](images/Lily_Trap.jpg){#fig-lily fig-align="center"}
+
+### Load raw data
+
+```{r load_raw_data}
+
+d <- readxl::read_xlsx(path = here("data", "raw","data_arthropods_flying.xlsx"), sheet = 1) |> 
+select(-c(sort, remarks))|> # remove unnecesary column
+ filter( !is.na(size) )|>  # remvoe NAs observations 
+rename(length = size)
+
+head(d)
+```
+
+### Metadata:
+
+```{r metadata}
+
+
+data_dict <- data.frame(
+  Column_name = c(
+    "site", "location", "date", "class", "order", "suborder", "family",
+    "subfamily", "juvenile", "terrestrial", "juv aquatic", "unusable",
+    "length", "remarks"
+  ),
+  Explanation = c(
+    "Study system in which the individual was sampled",
+    "Site at which individual was sampled (i.e. pool or control)",
+    "Collection period during which the individual was sampled (i.e. June or July)",
+    "Taxonomic class the sampled individual belongs to",
+    "Taxonomic order the sampled individual belongs to",
+    "Taxonomic suborder the sampled individual belongs to (where available)",
+    "Taxonomic family the sampled individual belongs to (where available)",
+    "Taxonomic subfamily the sampled individual belongs to (where available)",
+    "Binary value indicating if the sampled individual was a juvenile. 1 = juvenile, 0 = adult",
+    "Binary value indicating if the sampled individual was winged. 1 = non-winged, 0 = winged",
+    "Binary value indicating if the sampled individual belongs to a taxa with purely aquatic juveniles. 1 = aquatic, 0 = not aquatic",
+    "Binary value indicating if the sampled individual came from water (amphipoda, gastropoda)",
+    "Length of the sampled individual in mm (rounded to full numbers). Measured from head to end of abdomen, excluding appendages (wings, limbs, antennae, cerci, etc.)",
+    "Additional comments or information about a given individual"
+  )
+)
+
+kable(data_dict, align = c("l","l"), caption = "Metadata for data_arthropods_flying.xlsx")
+
+```
+
+Question:
+
+How many taxa which ones are there?
+
+```{r get_unique_taxa_families}
+# Get unique families (excluding NA)
+families <- unique(na.omit(d$family))
+
+# Number of unique families
+num_families <- length(families)
+
+# Print results
+cat("Number of unique families:", num_families, "\n\n")
+cat("Families:\n")
+print(sort(families))
+```
+
+Description of the families we have found:
+
+```{r list_families}
+# Families Found Near Streams in Switzerland
+
+families_table <- data.frame(
+  Family = c(
+    "Aphidoidea", "Cantharidae", "Carabidae", "Chrysomelidae",
+    "Coccinellidae", "Cucujidae", "Curculionidae", "Dytiscidae",
+    "Elmidae", "Erebidae", "Forficulidae", "Formicidae",
+    "Gerridae", "Gyrinidae", "Haliplidae", "Hydrophilidae",
+    "Latridiidae", "Monotomidae", "Mordellidae", "Nitidulidae",
+    "Notonectidae", "Panorpidae", "Phalacridae", "Psylloidea",
+    "Scirtidae", "Staphylinidae", "Syrphidae", "Tabanidae",
+    "Vespidae"
+  ),
+  Description = c(
+    "Aphids; plant sap-feeders, often found on riparian vegetation.",
+    "Soldier beetles; predatory or nectar-feeding, common in meadows near water.",
+    "Ground beetles; many species are predators along stream banks.",
+    "Leaf beetles; herbivores on riparian plants.",
+    "Lady beetles; mostly aphid predators on vegetation.",
+    "Flat bark beetles; live under bark, sometimes in moist riparian wood.",
+    "Weevils; herbivores feeding on riparian plants and shrubs.",
+    "Predaceous diving beetles; aquatic predators in streams and ponds.",
+    "Riffle beetles; aquatic, live attached to stones in running water.",
+    "Tiger moths and relatives; larvae feed on diverse plants near water.",
+    "Earwigs; omnivores hiding under stones and wood along streams.",
+    "Ants; common in soils and vegetation along riparian zones.",
+    "Water striders; aquatic predators skating on water surfaces.",
+    "Whirligig beetles; fast swimmers on water surfaces in streams.",
+    "Crawling water beetles; small herbivorous beetles in shallow water.",
+    "Water scavenger beetles; aquatic or semi-aquatic scavengers.",
+    "Minute brown scavenger beetles; found in decaying plant matter.",
+    "Root-eating beetles; often associated with decaying wood.",
+    "Tumbling flower beetles; found on flowers near riparian habitats.",
+    "Sap beetles; feed on decaying fruit, fungi, and plant material.",
+    "Backswimmers; aquatic predators that swim upside down.",
+    "Scorpionflies; scavengers, often in damp shaded stream habitats.",
+    "Shining flower beetles; small pollen feeders.",
+    "Psyllids; plant sap-feeders, often on riparian trees and shrubs.",
+    "Marsh beetles; aquatic or semi-aquatic beetles in wetlands.",
+    "Rove beetles; very diverse predators and scavengers in moist habitats.",
+    "Hoverflies; larvae are aphid predators, adults visit flowers.",
+    "Horse flies; adults feed on blood or nectar, larvae in wet soils.",
+    "Wasps; diverse group of predators and parasitoids near water."
+  )
+)
+
+kable(families_table, caption = "Ecological roles of arthropod families sampled close to streams in Switzerland")
+
+```
+
+### Plot data
+
+```{r pot_histogram}
+
+# Alternative: side-by-side histogram (use 'dodge')
+ggplot(d, aes(x = length, fill = location)) +
+  geom_histogram(binwidth = 1, color = "black", alpha = 0.7, position = "dodge") +
+  labs(
+    title = "Histogram of individual sizes by sampled location (emergent trap)",
+    x = "Size (mm)",
+    y = "Frequency",
+    fill = "Location"
+  ) +
+  theme_bw(base_size = 14)
+
+# with stat halfeye
+ggplot(d, aes(y = location, x = length, fill = location)) +
+  stat_halfeye(position = "dodge",
+    adjust = 1,       # smoothness of density
+    width = 0.6,        # width of half-eye
+    justification = -0.1,
+    point_interval = mean_qi,  # show mean & 95% interval
+    alpha = 0.7
+  ) +
+  labs(
+    title = "Size Distributions by Location (emergent trap)",
+    y = "Location",
+    x = "Size (mm)"
+  ) +
+  theme_bw(base_size = 14)
+
+```
+
+## 
 
 ## Conclusions
 
