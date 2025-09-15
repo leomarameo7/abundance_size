@@ -45,14 +45,16 @@ theme_set(newtheme)
 I am doing this notebook to help me and collaborators to understand which data we have and what is the clean / wrangle actions we should do before fitting the individual size distribution (ISD) model proposed by [@wesner2024] to answer these questions:
 
 ::: {.callout-important appearance="simple"}
-**Main questions:**
+**Open questions:**
 
-\- Does beaver presence influence arthropods individual size distribution (ISD) ? 
+-   Does beaver damming influence arthropod individual size distribution (ISD)?
 
-\- To what extend does anthropogenic land area mediate beaver influence on arthropods ISD ?
+-   Does anthropogenic land area mediate the beaver effect on arthropods ISD ?
+
+-   ... your question (maybe something about terrestrial vs aquatic ISD) ?
 :::
 
-We have sampled the arthropod community of Switzerland streams. We used three (3) different methods, catching different insect taxon. The three methods from now on we defined as: `emergent_trap`, `kick_net`, `suction`.
+We have sampled the arthropod community in Swiss streams. We used three (3) different methods, catching different insect taxon. The three methods from now on we defined as: `emergent_trap`, `kick_net`, `suction`.
 
 ## Kick net: aquatic invertebrates community
 
@@ -209,13 +211,9 @@ write.csv(m3, here( "data","processed", "m3.csv"  ))
 
 ```
 
-### From length to dry weight
+### Families
 
-We are going to estimate arthropod's body mass using taxon-­specific published length-­ weight regressions. But first let's check which families are there !
-
-::: callout-important
-Note that ISD relationships are sensitive to the under sampling of small body sizes. [@perkins2018] sampled benthic macroinvertebrates using comparable methods and found that body sizes smaller than 0.0026 mg were under sampled. Therefore, you should find and set the minimum invertebrate body size before estimating ISD relationships to avoid the under sampling of small body sizes.
-:::
+First let's check which families are there !
 
 #### Load processed data
 
@@ -243,7 +241,7 @@ levels_m4 <- unique(m4$family)
 total_m4 <- length(levels_m4)
 
 # Print results
-cat("Total number of families in m4:", total_m4, "\n")
+cat("Total number of observed arthropod families sampled by kick net:", total_m4, "\n")
 
 ```
 
@@ -361,22 +359,36 @@ datatable(
 )
 ```
 
-Now we are going to load length-weight regression coefficients from [@pomeranz2022], [@sohlström2018] and .
+### Load allometric coefficients 
+
+Now we are going to load length-weight regression coefficients from [@vanleeuwen2025 ; @pomeranz2022].
 
 ```{r loadallometriccoeff}
 # Load coefficient datasets
-coeff_sol <- read_csv(here("data","raw","lw","sohlstrom.csv")) # Sohlström et al. 2018 Ecology and Evolution  10.1002/ece3.4702
-coeff_pom_raw <- read_csv(here("data","raw","lw","pomeranz_2022.csv")) # Pomeranz et al. 2021 Glob Change BIology  10.1111/gcb.15862
+coeff_pom_raw <- read_csv(here("data","raw","lw","pomeranz_2022.csv")) # Pomeranz et al. 2021 Glob Change Biology
+vl <- read_excel(here("data","raw","lw","van Leeuwen_2025.xlsx")) # van Leeuwen et al. 2025
 
-levels_sol <- unique(coeff_sol$family)
+```
+
+Extract unique families in each data frame:
+
+```{r unique_families}
+# Unique families
 levels_pom <- unique(coeff_pom_raw$family)
+levels_vl  <- unique(vl$family)
 
-# Count matches with our dataframe m4 
-matches_sol <- length(intersect(levels_m4, levels_sol))
+# Count matches with our dataframe m4
 matches_pom <- length(intersect(levels_m4, levels_pom))
+matches_vl  <- length(intersect(levels_m4, levels_vl))
+# Combine families from Pomeranz + van Leeuwen
+levels_pom_vl <- union(levels_pom, levels_vl)
 
-cat("Number of observed arthropod families present in Sohlström et al. 2018:", matches_sol, "\n")
+# Count matches with our dataframe m4
+matches_pom_vl <- length(intersect(levels_m4, levels_pom_vl))
+
 cat("Number of observed arthropod families present in Pomeranz et al. 2022:", matches_pom, "\n")
+cat("Number of observed arthropod families present in van Leeuwen et al. 2025:", matches_vl, "\n")
+cat("Number of observed arthropod families present jointly in Pomeranz (2022) + van Leeuwen (2025):", matches_pom_vl, "\n")
 ```
 
 ```{r families_missing}
@@ -387,7 +399,111 @@ cat("Families taxa that are present in our data frame but not in Pomeranz et al.
 print(not_in_pom_m4)
 ```
 
-## Terrestrial arthropods: suction
+#### Length - Weight estimates
+
+We are going to estimate arthropod's body mass using taxon-­specific published length-­ weight regressions. Remember that we are going to use the allometric relationship $W = a*L^b$, where $L$ is the arthropod's length in millimeters, $W$ is the dry weight in milligrams. $a$ and $b$ are constants.
+
+What I am going to do these steps:
+
+1.  I will process the van Leeuwen (2025) dataset by averaging the coefficients $a$ and $b$ for each arthropod family, in case multiple entries exist for the same family.\
+2.  I will join these averaged coefficients to my observed arthropod dataset (`m4`) based on the family column.\
+3.  I will calculate the dry weight of each individual using the regression formula $W = a * L^b$, where $W$ is dry weight and $L$ is body length.\
+4.  For families in `m4` that do not have a corresponding $a$ and $b$ in [@vanleeuwen2025], I will identify them as missing.\
+5.  I will process the Pomeranz (2022) dataset similarly, averaging $a$ and $b$ for families with multiple entries.\
+6.  I will join the Pomeranz coefficients to the missing families from the previous step and calculate their dry weights using the same formula $W = a * L^b$.\
+7.  For the remaining 20 families for which no family-level coefficients exist, I will use the van Leeuwen data set to calculate **order-level averages** of $a$ and $b$.\
+8.  Finally, I will identify any families that still do not have coefficients in either data set after these steps.
+
+Steps 1 to 4 :
+
+```{r lw_estimates}
+# 1. Prepare van Leeuwen coefficients: average if multiple per family
+vl_avg <- vl %>%
+  group_by(family) %>%
+  summarise(
+    a = mean(a, na.rm = TRUE),
+    b = mean(b, na.rm = TRUE),
+    source_publication = paste(unique(`source publication`), collapse = "; "),
+    .groups = "drop"
+  )
+
+# 2. Join with observed arthropod families
+m5 <- m4 %>%
+  left_join(vl_avg, by = "family") %>%
+  mutate(dry_weight = a * (length ^ b))
+
+# 3. Check missing families
+missing_families <- m5 %>%
+  filter(is.na(a) | is.na(b)) %>%
+  distinct(family)
+
+n_missing <- nrow(missing_families)
+n_total   <- n_distinct(m4$family)
+prop_missing <- n_missing / n_total
+
+cat("Number of observed arthropod families without a match in vl:", n_missing, "\n")
+cat("Proportion of missing families:", round(100 * prop_missing, 2), "%\n\n")
+
+print(missing_families)
+```
+
+Steps 5 - 6:
+
+-   I will process the @pomeranz2022 dataset similarly, averaging $a$ and $b$ for families with multiple entries.
+-   I will join the Pomeranz's coefficients to the missing families from the previous step and calculate their dry weights using the same formula $W = a * L^b$.
+
+```{r pomeranz_2022}
+# 1. Prepare Pomeranz coefficients: average if multiple per family
+pom_avg <- coeff_pom_raw %>%
+  group_by(family) %>%
+  summarise(
+    a = mean(a, na.rm = TRUE),
+    b = mean(b, na.rm = TRUE),
+    source = paste(unique(source), collapse = "; "),
+    .groups = "drop"
+  )
+
+# 2. Keep only missing families in m6 that are in Pomeranz
+pom_missing <- pom_avg %>%
+  filter(family %in% (m5 %>% filter(is.na(dry_weight)) %>% distinct(family) %>% pull(family)))
+
+# 3. Join Pomeranz coefficients to m6 for missing dry_weight
+m6 <- m5 %>%
+  left_join(
+    pom_missing %>% select(family, a, b, source),
+    by = "family",
+    suffix = c("", "_pom")
+  ) %>%
+  mutate(
+    dry_weight = ifelse(is.na(dry_weight), a_pom * (length ^ b_pom), dry_weight),
+    source_publication = ifelse(is.na(dry_weight), source, source_publication)
+  ) %>%
+  select(-a_pom, -b_pom, -source)
+
+# 4. Re-check missing families after Pomeranz
+still_missing <- m6 %>%
+  filter(is.na(dry_weight)) %>%
+  distinct(family)
+
+cat("Number of families still missing after checking Pomeranz:", nrow(still_missing), "\n")
+print(still_missing)
+
+```
+
+Step 6-8
+
+-   For the remaining 20 families for which no family-level coefficients exist, I will use the van Leeuwen data set to calculate **order-level averages** of $a$ and $b$.
+-   Finally, I will identify any families that still do not have coefficients in either data set after these steps.
+
+```{r}
+
+```
+
+::: callout-important
+Note that ISD relationships are sensitive to the under sampling of small body sizes. @perkins2018 sampled benthic macroinvertebrates using comparable methods and found that body sizes smaller than 0.0026 mg were under sampled. Therefore, you should find and set the minimum invertebrate body size before estimating ISD relationships to avoid the under sampling of small body sizes.
+:::
+
+## Suction: terrestrial invertebrates community
 
 This data was collected by Ph.D student Valentin Moser and Master students in 2021 and 2022 within 16 different streams in Switzerland. In each stream they sampled in 4 locations: `control`, `inflow`, `pool`, `outflow`. They sampled terrestrial arthropods by using a 5 x 1 m plots located at three different positions: one meter from the stream's edge (1), at 2 times the pool width distance (2) and 3 times the pool width distance (3) (i.e.,orange points in @fig-suctiondesign. Within each plot, they sampled the arthropods at the two ends of the 5 x 1 m plot in cylindrical baskets (50 cm diameter, 67 cm height, woven fabric) using suction sampling on a sunny day between 10:00-17:00 during peak arthropod activity @fig-suction. The samples were stored in ethanol, individuals were counted, measured and identified to order level with the help of a binocular.
 
@@ -506,7 +622,7 @@ ggplot(t3, aes(x = length, fill = location)) +
   scale_x_continuous(limits = c(0,20), breaks = seq(0,20,1))
 ```
 
-## Emergent arthropods
+## Emergent trap: aquatic and terrestrial invertebrates community
 
 We are going to load the raw data collected by Ph.D. student [Valentin Moser](https://www.wsl.ch/de/mitarbeitende/moserval/) and research assistants during June 2021 in **eight** different beaver dammed streams (@fig-moserflying) within the WSL-Eawag project: [Species interactions in beaver engineered habitats link land-water ecosystem processes](https://www.wsl.ch/de/projekte/sfsf/). They have sampled in two locations within each site: the main pond created by the beaver (i.e. `pool` factor level within the column `location`) and 500 meters upstream of that pond (i.e. `control` factor level within the column `location`).
 

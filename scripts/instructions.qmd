@@ -37,19 +37,19 @@ We want to tell you something:
 
 The first important thing you should do when you are going to start a research project is to think about open-unsolved question(s). Why? Well, research questions play a central role in the scientific method because they indicate the problem that is being addressed, and clearly state what is being investigated [@thelwall2020]. Indeed, the presence of research questions within a research article is an established quality indicator. In fact, research questions form the basis of determining hypotheses, methods, and how interpretations and analysis of outcomes are undertaken [@covvey2024]. Once you have a good question to investigate, you can begin to think of ways to answer it! To prevent you to waste time and effort, we suggest to invest fully in the creation of rigorous research questions. Remember: first things first.
 
-Therefore, the unsolved question we will answer is as follow:
+Therefore, the open questions we will answer are as follow:
 
 ::: callout-important
-**Research questions:**
+**Open questions:**
 
 -   Does beaver damming influence arthropod individual size distribution (ISD)?
 
--   Does beaver damming impact equally terrestrial and aquatic arthropods ISDs?
+-   Does anthropogenic land area mediate the beaver effect on arthropods ISD ?
 
--   Does anthropogenic land area disrupt or mediate the beaver effect on arthropods ISD ?
-
--   ... your question
+-   ... your question (maybe something about terrestrial vs aquatic ISD) ?
 :::
+
+Within this research project, you will get access to data that represent the terrestrial and aquatic arthropod community. We used three (3) different methods, catching different insect taxon. The three methods from now on we defined as: `emergent_trap`, `kick_net`, `suction`. You will find more info and details about these methods in the file `0_sampling_methods.html`
 
 ### Beavers
 
@@ -60,8 +60,6 @@ You may ask: why do we want to study **beavers**?
 The answer is straightforward: beavers (*Castor fiber, Castor canadensis*) are one of the most influential mammalian ecosystem engineers, heavily modifying river corridor hydrology, geomorphology, nutrient cycling, and ecosystems [@larsen2021]. Eradicated at the start of the 19th century, beavers can now be found once again across the Switzerland lowlands. Particularly in the last ten years, they have become so widespread that five to six thousand individuals are currently estimated to live in Swiss streams [@angst2023]! Until now, however, it was unclear whether this was also true of urban and agricultural streams – in other words, precisely those streams that the beavers predominantly inhabit today. Researchers from Eawag and the University of Lausanne have shown that this is indeed the case: beaver ponds not only increased the arthropods biodiversity of two streams in agricultural areas, but also altered the organic matter supply available to them [@robinson2020].
 
 ### Individual size distribution
-
-retrived from [here](https://digital.csic.es/bitstream/10261/389368/2/Ersoy_et_al_2025_Metadata_S1.pdf)
 
 You may ask: why do we want to study the arthropods' individual size distribution ?
 
@@ -109,7 +107,7 @@ Traditionally, the size spectra is binned into arbitrarily defined body weight c
 
 We may agree that the specification of a model that approximates the *true* data-generating process is central to any statistical analysis. The Bayesian theorem allows you to do exactly this. You can use prior ecological knowledge and combined it with observed data through the likelihood to reflect updated a posteriori knowledge in the form of posterior probability distributions for all model parameters (i.e. the posteriors). A quote from chapter 1, of [\@johnson2022](%5Bonline%20version%5D(https://www.bayesrulesbook.com/chapter-1#thinking-like-a-bayesian)):
 
-[![A Bayesian knowledge-building diagram. Credits to ](images/bayes_diagram_figure1.2.png){#fig-bayesreason fig-align="left" width="335"}](https://www.bayesrulesbook.com/chapter-1#thinking-like-a-bayesian)
+[![A Bayesian knowledge-building diagram. Credits to](images/bayes_diagram_figure1.2.png){#fig-bayesreason fig-align="left" width="335"}](https://www.bayesrulesbook.com/chapter-1#thinking-like-a-bayesian)
 
 > Suppose there’s a new Italian restaurant in your town. It has a 5-star online rating *and* you love Italian food! Thus, prior to ever stepping foot in the restaurant, you anticipate that it will be quite delicious. On your first visit, you collect some edible data: your pasta dish arrives a soggy mess. Weighing the stellar online rating against your own terrible meal (which might have just been a fluke), you update your knowledge: this is a 3-star not 5-star restaurant. Willing to give the restaurant another chance, you make a second trip. On this visit, you’re pleased with your Alfredo and increase the restaurant’s rating to 4 stars. You continue to visit the restaurant, collecting edible data and updating your knowledge each time.
 
@@ -141,20 +139,110 @@ If you are not willing to use the `isdbayes` package, you can use the `sizespect
 
 If you decide to use the `isdbayes` package, please read this README.rmd made by Wesner et al ([link](https://github.com/jswesner/isdbayes)).
 
-### Analysis
+## To do 
 
-Jeff Wesner and J. Pomeranz
+::: callout-note
+### 17.09.2025: 1.45 hours
 
--   Exclude emergent trap sampling
+**From 15 h till 16:45h**
 
--   Use `location` as predictor : 4 levels . And then make inference.
+This session will be online with Leonardo Capitani. Link with zoom (link [here](https://us02web.zoom.us/j/7894473633?pwd=Wi83TXJyUGhwZytpU3lEWXJSaTl0UT09)). You should use these 1.45 hours to:
 
--   Fix a body size cut off : waiting Jeff script
+-   Read the file: `instructions.html`
 
--   
+-   Read the file: `0_sampling_methods.html`
 
-### To do next
+-   Answer these questions:
 
--   
+\- Why did you choose this project?
+
+\- How many sampling method did we use to sample the arthropods community?
+
+\- What is the arthropod ISD?
+
+\- How do you define your experience with R ?
+
+\- Have you ever heard about the statistical approach called *bayesian* ?
+
+Note the answers in your notebook, please.
+:::
+
+::: callout-note
+### 19.09.2025: **3.45 hours** 
+
+**from 08:15 till 12h**
+
+This session will be online with Leonardo Capitani. Link with zoom (link [here](https://us02web.zoom.us/j/7894473633?pwd=Wi83TXJyUGhwZytpU3lEWXJSaTl0UT09)). You should use these 3.45 hours to:
+
+Please note that when we talk about expectations we refer as a synonym of the word *hypotheses*.
+
+Please read @pomeranz2024: Maximum likelihood outperforms binning methods for detecting differences in abundance size spectra across environmental gradients.
+
+-   Answer this question: What is your expectation about question 1? Will $\lambda$ be higher or lower in beaver's influenced locations (inflow, pool, outflow) compared to control location?
+
+-   Draw in your notebook the expectation for question 1 as a figure like @fig-gjoni
+
+-   Answer this question: What is your expectation in regards to question 2?
+
+-   Draw in your notebook the expectation for question 2 as a figure like @fig-gjoni
+
+-   Discuss and compare your expectations with your colleagues, Leonardo and Francesco. 10-15 min max.
+
+-   Decide which sampling method-arthropod community do you want to use.
+
+-   Are you able to load in R the processed data?
+
+-   Plot an histogram of the arthropod weight by location. See as an example, figures in `0_sampling_methods.html`
+:::
+
+::: callout-note
+### 01.10.2025: 3.45 hours
+
+**from 13 h till 16:45h**
+:::
+
+::: callout-note
+### 03.10.2025: 3.45 hours
+
+**from 08:15 till 12h**
+:::
+
+::: callout-note
+### 08.10.2025: 3.45 hours
+:::
+
+::: callout-note
+### 09.10.2025: 3.45 hours
+:::
+
+::: callout-note
+### 10.10.2025: 3.45 hours
+
+Leonardo and Francesco will not be present in this session. You should use these 3.45 hours to:
+
+-   make one figure that answers question 1
+
+-   make one figure that answers question 2
+
+-   Given your figure 1, what is the take home message of this figure? State it in one or two sentences. These sentences answer question 1.
+
+-   Given figure 2, what is the take home message of this figure? State it in one or two sentences. These sentences answer question 2.
+:::
+
+::: callout-note
+### 15.10.2025: 3.45 + 3.45 hours
+
+Francesco will be present in this session. You should use these 3.45 hours to:
+
+-   Communicate to Francesco what are the answers to question 1 and question 2 using the figures you have made. Make some bullets points on this topic.
+
+-   Answer and discuss with Francesco: Does these results support, contradict your expectations/hypothesis? Make some bullets points on that.
+
+-   Does your results support / contradict previous studies about arthropods ISD?
+
+-   Answer this question: Why are your results important for the Ecology community?
+
+-   Answer this question: What are the caveats of your analysis ?
+:::
 
 ## References
