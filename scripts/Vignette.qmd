@@ -75,14 +75,14 @@ What lambda ($\lambda$) values ​​should we expect?
 
 From different global analysis, $\lambda$ is restricted to a relatively narrow range between about −2.05 and −1.2 [@wesner2024]. For example, global analysis of phytoplankton reveals values of $\lambda = −1.75$ , consistent with predictions based on sublinear scaling of metabolic rate with mass of −3/4 [@perkins2019].
 
-[![Simulated individual body size distribution retrieved from [@gjoni]. Y-axis on logarithm scale. Note that the y-axis is “number of values ≥ x” because the Pareto law is defined in terms of the survival function, and this makes the power-law scaling interpretable.](images/gjoni_figure_1.png){#fig-gjoni fig-align="center" width="492"}](https://www.biorxiv.org/content/10.1101/2024.01.09.574822v1)
+[![Simulated individual body size distribution retrieved from . Y-axis on logarithm scale. Note that the y-axis is “number of values ≥ x” because the Pareto law is defined in terms of the survival function, and this makes the power-law scaling interpretable.](images/gjoni_figure_1.png){#fig-gjoni fig-align="center" width="492"}](https://www.biorxiv.org/content/10.1101/2024.01.09.574822v1)
 
 #### Ecological implications
 
-The lambda exponent can be considered as an emergent property of community interactions, most notably trophic energy transfer [@mehner2018]. Flatter $\lambda$ slopes indicate energy passing more efficiently from small, low-trophic position individuals to larger, high-trophic position individuals [@blanchard2009; @mehner2018]. However, there are multiple processes that may disrupt this, in particular, deviations in the relationship between body size and trophic position associated with large individuals feeding at low trophic levels (e.g., [@broadway2015]. In the past, $\lambda$ has been used to address offshore oceanic fishing yields [@blanchard2014;@law2023; @kolding2016], changes in ecosystem health relative to climate change [@queirós2018; @pomeranz2022], and the effects of oligotrophication, eutrophication, pollution, and invasive species [@arranz2023; @buba2017; @murry2024; @pomeranz2019;@murry2014]. Specifically, fishery exploitation tends to steepen $\lambda$ [@jennings2005], whereas abundance shifts to large-bodied low position fish tends to flatten $\lambda$ [@broadway2015; @murry2024].
+The lambda exponent can be considered as an emergent property of community interactions, most notably trophic energy transfer [@mehner2018]. Flatter $\lambda$ slopes indicate energy passing more efficiently from small, low-trophic position individuals to larger, high-trophic position individuals [@blanchard2009; @mehner2018]. However, there are multiple processes that may disrupt this, in particular, deviations in the relationship between body size and trophic position associated with large individuals feeding at low trophic levels (e.g., [@broadway2015]. In the past, $\lambda$ has been used to address offshore oceanic fishing yields [@blanchard2014; @law2023; @kolding2016], changes in ecosystem health relative to climate change [@queirós2018; @pomeranz2022], and the effects of oligotrophication, eutrophication, pollution, and invasive species [@arranz2023; @buba2017; @murry2024; @pomeranz2019; @murry2014]. Specifically, fishery exploitation tends to steepen $\lambda$ [@jennings2005], whereas abundance shifts to large-bodied low position fish tends to flatten $\lambda$ [@broadway2015; @murry2024].
 
 ::: {.callout-tip appearance="minimal"}
-### **Your turn:** 
+### **Your turn:**
 
 **Expectations/hypothesis:**
 
@@ -107,9 +107,9 @@ Traditionally, the size spectra is binned into arbitrarily defined body weight c
 
 #### Bayesian ISD estimate
 
-We may agree that the specification of a model that approximates the *true* data-generating process is central to any statistical analysis. The Bayesian theorem allows you to do exactly this. You can use prior ecological knowledge and combined it with observed data through the likelihood to reflect updated a posteriori knowledge in the form of posterior probability distributions for all model parameters (i.e. the posteriors). A quote from chapter 1, of [@johnson2022]([online version](https://www.bayesrulesbook.com/chapter-1#thinking-like-a-bayesian)):
+We may agree that the specification of a model that approximates the *true* data-generating process is central to any statistical analysis. The Bayesian theorem allows you to do exactly this. You can use prior ecological knowledge and combined it with observed data through the likelihood to reflect updated a posteriori knowledge in the form of posterior probability distributions for all model parameters (i.e. the posteriors). A quote from chapter 1, of [\@johnson2022](%5Bonline%20version%5D(https://www.bayesrulesbook.com/chapter-1#thinking-like-a-bayesian)):
 
-[![A Bayesian knowledge-building diagram. Credits to [@johnson2022]](images/bayes_diagram_figure1.2.png){#fig-bayesreason fig-align="left" width="335"}](https://www.bayesrulesbook.com/chapter-1#thinking-like-a-bayesian)
+[![A Bayesian knowledge-building diagram. Credits to ](images/bayes_diagram_figure1.2.png){#fig-bayesreason fig-align="left" width="335"}](https://www.bayesrulesbook.com/chapter-1#thinking-like-a-bayesian)
 
 > Suppose there’s a new Italian restaurant in your town. It has a 5-star online rating *and* you love Italian food! Thus, prior to ever stepping foot in the restaurant, you anticipate that it will be quite delicious. On your first visit, you collect some edible data: your pasta dish arrives a soggy mess. Weighing the stellar online rating against your own terrible meal (which might have just been a fluke), you update your knowledge: this is a 3-star not 5-star restaurant. Willing to give the restaurant another chance, you make a second trip. On this visit, you’re pleased with your Alfredo and increase the restaurant’s rating to 4 stars. You continue to visit the restaurant, collecting edible data and updating your knowledge each time.
 
@@ -141,7 +141,7 @@ If you are not willing to use the `isdbayes` package, you can use the `sizespect
 
 If you decide to use the `isdbayes` package, please read this README.rmd made by Wesner et al ([link](https://github.com/jswesner/isdbayes)).
 
-### Analysis 
+### Analysis
 
 Jeff Wesner and J. Pomeranz
 
