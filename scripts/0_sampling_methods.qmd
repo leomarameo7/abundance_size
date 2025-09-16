@@ -54,7 +54,7 @@ I am doing this notebook to help me and collaborators to understand which data w
 -   ... your question (maybe something about terrestrial vs aquatic ISD) ?
 :::
 
-We have sampled the arthropod community in Swiss streams. We used three (3) different methods, catching different insect taxon. The three methods from now on we defined as: `emergent_trap`, `kick_net`, `suction`.
+In order to answer these questions, we have sampled the arthropod community in Swiss streams dammed by beavers. We have used three (3) different methods, catching different insect taxons. The three methods from now on we defined as: `intercept_trap`, `kick_net`, `suction`.
 
 ## Kick net: aquatic invertebrates community
 
@@ -359,9 +359,9 @@ datatable(
 )
 ```
 
-### Load allometric coefficients 
+### Load allometric coefficients
 
-Now we are going to load length-weight regression coefficients from [@vanleeuwen2025 ; @pomeranz2022].
+Now we are going to load length-weight regression coefficients from [@vanleeuwen2025; @pomeranz2022].
 
 ```{r loadallometriccoeff}
 # Load coefficient datasets
@@ -622,17 +622,17 @@ ggplot(t3, aes(x = length, fill = location)) +
   scale_x_continuous(limits = c(0,20), breaks = seq(0,20,1))
 ```
 
-## Emergent trap: aquatic and terrestrial invertebrates community
+## Interception trap: flying arthropods community
 
-We are going to load the raw data collected by Ph.D. student [Valentin Moser](https://www.wsl.ch/de/mitarbeitende/moserval/) and research assistants during June 2021 in **eight** different beaver dammed streams (@fig-moserflying) within the WSL-Eawag project: [Species interactions in beaver engineered habitats link land-water ecosystem processes](https://www.wsl.ch/de/projekte/sfsf/). They have sampled in two locations within each site: the main pond created by the beaver (i.e. `pool` factor level within the column `location`) and 500 meters upstream of that pond (i.e. `control` factor level within the column `location`).
+We are going to load the raw data collected by Ph.D. student [Valentin Moser](https://www.wsl.ch/de/mitarbeitende/moserval/) and research assistants during June 2021 in **eight** different beaver dammed streams (@fig-moserflying) within the WSL-Eawag project: [Species interactions in beaver engineered habitats link land-water ecosystem processes](https://www.wsl.ch/de/projekte/sfsf/). They have sampled in two locations within each site: the main pond created by the beaver (i.e. `pool` factor level within the column `location`) and 500 meters upstream of that pond (i.e. `control` factor level within the column `location`). Please refer to [@moser2025] for detailed sampling method.
 
 ![From Moser et al. 2025. Habitat heterogeneity and food availability in beaver-engineered streams foster bat richness, activity and feeding. Journal of Animal Ecology](images/RR_discussion.001-01.png){#fig-moserflying fig-align="center"}
 
 In the folder `data/raw` you will find: `data_arthropods_flying.xlsx`
 
-Emergent arthropods were collected by emergent traps (surface area 0.25 $m^2$) covered with 500 $\mu m$ net during 10 days.
+Flying arthropods were collected by interception traps (surface area 0.25 $m^2$) covered with 500 $\mu m$ net during 10 days.
 
-![Example of the trap used to collect flying arthropods. Dr. Cornelia Twining (Eawag) deploys the arthropods trap over the stream water surface. Click on the photo for the credits.](images/Lily_Trap.jpg){#fig-lily fig-align="center"}
+![Example of the interception trap used to collect flying arthropods. Credits to Valentin Moser. ](images/emergent_trap.png){#fig-lily fig-align="center"}
 
 ### Load raw data
 
@@ -757,7 +757,7 @@ kable(families_table, caption = "Ecological roles of arthropod families sampled 
 ggplot(d, aes(x = length, fill = location)) +
   geom_histogram(binwidth = 1, color = "black", alpha = 0.7, position = "dodge") +
   labs(
-    title = "Histogram of individual sizes by sampled location (emergent trap)",
+    title = "Histogram of individual sizes by sampled location (intercept trap)",
     x = "Size (mm)",
     y = "Frequency",
     fill = "Location"
@@ -774,7 +774,7 @@ ggplot(d, aes(y = location, x = length, fill = location)) +
     alpha = 0.7
   ) +
   labs(
-    title = "Size Distributions by Location (emergent trap)",
+    title = "Size Distributions by Location (intercept trap)",
     y = "Location",
     x = "Size (mm)"
   ) +
@@ -787,7 +787,7 @@ ggplot(d, aes(y = location, x = length, fill = location)) +
 ## Conclusions
 
 ::: callout-important
--   Emergent trap method (aquatic-terrestrial invertebrates): we can standardize by the area sampled.
+-   Interception trap method (aquatic-terrestrial invertebrates): we can standardize by the area sampled.
 
     For Control, we have `r nrow(d[d$location == "Control", ])` observations, with a minimum length value = `r min(d$length[d$location == "Control"], na.rm = TRUE)` and a maximum length value = `r max(d$length[d$location == "Control"], na.rm = TRUE)`.
 

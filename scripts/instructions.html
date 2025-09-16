@@ -3294,7 +3294,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Modified</div>
     <div class="quarto-title-meta-contents">
-      <p class="date-modified">September 15, 2025</p>
+      <p class="date-modified">September 16, 2025</p>
     </div>
   </div>
     
@@ -3483,16 +3483,20 @@ Important
 <p><strong>From 15 h till 16:45h</strong></p>
 <p>This session will be online with Leonardo Capitani. Link with zoom (link <a href="https://us02web.zoom.us/j/7894473633?pwd=Wi83TXJyUGhwZytpU3lEWXJSaTl0UT09">here</a>). You should use these 1.45 hours to:</p>
 <ul>
-<li><p>Read the file: <code>instructions.html</code></p></li>
-<li><p>Read the file: <code>0_sampling_methods.html</code></p></li>
-<li><p>Answer these questions:</p></li>
+<li><p>Read the file: <code>instructions.html.</code> Focus on open questions and expectations. Invest 30 min.</p></li>
+<li><p>Read the file: <code>0_sampling_methods.html.</code>Very briefly. Invest no more than 20 min.</p></li>
+<li><p>Read <span class="citation" data-cites="moser">Moser <em>et al.</em> (<a href="#ref-moser" role="doc-biblioref">n.d.</a>)</span> paper. Focus on methods section. Invest no more than 15 min.</p></li>
 </ul>
-<p>- Why did you choose this project?</p>
+<p>Answer these questions:</p>
 <p>- How many sampling method did we use to sample the arthropods community?</p>
 <p>- What is the arthropod ISD?</p>
 <p>- How do you define your experience with R ?</p>
 <p>- Have you ever heard about the statistical approach called <em>bayesian</em> ?</p>
 <p>Note the answers in your notebook, please.</p>
+<p><strong>At the end of this session, you should:</strong></p>
+<ul>
+<li>think and formulate an open question about the topic: beaver and terrestrial vs aquatic arthropod’s ISD.</li>
+</ul>
 </div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
@@ -3514,7 +3518,10 @@ Important
 <li><p>Draw in your notebook the expectation for question 1 as a figure like <a href="#fig-gjoni" class="quarto-xref">Figure 2</a></p></li>
 <li><p>Answer this question: What is your expectation in regards to question 2?</p></li>
 <li><p>Draw in your notebook the expectation for question 2 as a figure like <a href="#fig-gjoni" class="quarto-xref">Figure 2</a></p></li>
-<li><p>If you have</p></li>
+<li><p>Discuss and compare your expectations with your colleagues, Leonardo and Francesco. 10-15 min max.</p></li>
+<li><p>Decide which sampling method-arthropod community do you want to use.</p></li>
+<li><p>Are you able to load in R the processed data?</p></li>
+<li><p>Plot an histogram of the arthropod weight by location. See as an example, figures in <code>0_sampling_methods.html</code></p></li>
 </ul>
 </div>
 </div>
@@ -3659,6 +3666,9 @@ Law, R. &amp; Plank, M.J. (2023). <a href="https://doi.org/10.1111/faf.12705">Fi
 </div>
 <div id="ref-mehner2018" class="csl-entry" role="listitem">
 Mehner, T., Lischke, B., Scharnweber, K., Attermeyer, K., Brothers, S., Gaedke, U., <em>et al.</em> (2018). <a href="https://doi.org/10.1002/ecy.2347">Empirical correspondence between trophic transfer efficiency in freshwater food webs and the slope of their size spectra</a>. <em>Ecology</em>, 99, 1463–1472.
+</div>
+<div id="ref-moser" class="csl-entry" role="listitem">
+Moser, V., Capitani, L., Zehnder, L., Hürbin, A., Obrist, M.K., Ecker, K., <em>et al.</em> (n.d.). <a href="https://doi.org/10.1111/1365-2656.70136">Habitat heterogeneity and food availability in beaver-engineered streams foster bat richness, activity and feeding</a>. <em>Journal of Animal Ecology</em>, n/a.
 </div>
 <div id="ref-murry2014" class="csl-entry" role="listitem">
 Murry, B.A. &amp; Farrell, J.M. (2014). <a href="https://doi.org/10.1111/fwb.12255">Resistance of the size structure of the fish community to ecological perturbations in a large river ecosystem</a>. <em>Freshwater Biology</em>, 59, 155–167.
@@ -4304,7 +4314,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb1-139"><a href="#cb1-139" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-140"><a href="#cb1-140" aria-hidden="true" tabindex="-1"></a>If you decide to use the <span class="in">`isdbayes`</span> package, please read this README.rmd made by Wesner et al (<span class="co">[</span><span class="ot">link</span><span class="co">](https://github.com/jswesner/isdbayes)</span>).</span>
 <span id="cb1-141"><a href="#cb1-141" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-142"><a href="#cb1-142" aria-hidden="true" tabindex="-1"></a><span class="fu">## To do </span></span>
+<span id="cb1-142"><a href="#cb1-142" aria-hidden="true" tabindex="-1"></a><span class="fu">## To do</span></span>
 <span id="cb1-143"><a href="#cb1-143" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-144"><a href="#cb1-144" aria-hidden="true" tabindex="-1"></a>::: callout-note</span>
 <span id="cb1-145"><a href="#cb1-145" aria-hidden="true" tabindex="-1"></a><span class="fu">### 17.09.2025: 1.45 hours</span></span>
@@ -4313,13 +4323,13 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb1-148"><a href="#cb1-148" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-149"><a href="#cb1-149" aria-hidden="true" tabindex="-1"></a>This session will be online with Leonardo Capitani. Link with zoom (link <span class="co">[</span><span class="ot">here</span><span class="co">](https://us02web.zoom.us/j/7894473633?pwd=Wi83TXJyUGhwZytpU3lEWXJSaTl0UT09)</span>). You should use these 1.45 hours to:</span>
 <span id="cb1-150"><a href="#cb1-150" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-151"><a href="#cb1-151" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Read the file: <span class="in">`instructions.html`</span></span>
+<span id="cb1-151"><a href="#cb1-151" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Read the file: <span class="in">`instructions.html.`</span> Focus on open questions and expectations. Invest 30 min.</span>
 <span id="cb1-152"><a href="#cb1-152" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-153"><a href="#cb1-153" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Read the file: <span class="in">`0_sampling_methods.html`</span></span>
+<span id="cb1-153"><a href="#cb1-153" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Read the file: <span class="in">`0_sampling_methods.html.`</span>Very briefly. Invest no more than 20 min.</span>
 <span id="cb1-154"><a href="#cb1-154" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-155"><a href="#cb1-155" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Answer these questions:</span>
+<span id="cb1-155"><a href="#cb1-155" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Read @moser paper. Focus on methods section. Invest no more than 15 min.</span>
 <span id="cb1-156"><a href="#cb1-156" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-157"><a href="#cb1-157" aria-hidden="true" tabindex="-1"></a><span class="sc">\-</span> Why did you choose this project?</span>
+<span id="cb1-157"><a href="#cb1-157" aria-hidden="true" tabindex="-1"></a>Answer these questions:</span>
 <span id="cb1-158"><a href="#cb1-158" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-159"><a href="#cb1-159" aria-hidden="true" tabindex="-1"></a><span class="sc">\-</span> How many sampling method did we use to sample the arthropods community?</span>
 <span id="cb1-160"><a href="#cb1-160" aria-hidden="true" tabindex="-1"></a></span>
@@ -4330,81 +4340,91 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb1-165"><a href="#cb1-165" aria-hidden="true" tabindex="-1"></a><span class="sc">\-</span> Have you ever heard about the statistical approach called *bayesian* ?</span>
 <span id="cb1-166"><a href="#cb1-166" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-167"><a href="#cb1-167" aria-hidden="true" tabindex="-1"></a>Note the answers in your notebook, please.</span>
-<span id="cb1-168"><a href="#cb1-168" aria-hidden="true" tabindex="-1"></a>:::</span>
-<span id="cb1-169"><a href="#cb1-169" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-170"><a href="#cb1-170" aria-hidden="true" tabindex="-1"></a>::: callout-note</span>
-<span id="cb1-171"><a href="#cb1-171" aria-hidden="true" tabindex="-1"></a><span class="fu">### 19.09.2025: **3.45 hours** </span></span>
-<span id="cb1-172"><a href="#cb1-172" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-173"><a href="#cb1-173" aria-hidden="true" tabindex="-1"></a>**from 08:15 till 12h**</span>
-<span id="cb1-174"><a href="#cb1-174" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-175"><a href="#cb1-175" aria-hidden="true" tabindex="-1"></a>This session will be online with Leonardo Capitani. Link with zoom (link <span class="co">[</span><span class="ot">here</span><span class="co">](https://us02web.zoom.us/j/7894473633?pwd=Wi83TXJyUGhwZytpU3lEWXJSaTl0UT09)</span>). You should use these 3.45 hours to:</span>
+<span id="cb1-168"><a href="#cb1-168" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-169"><a href="#cb1-169" aria-hidden="true" tabindex="-1"></a>**At the end of this session, you should:**</span>
+<span id="cb1-170"><a href="#cb1-170" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-171"><a href="#cb1-171" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>think and formulate an open question about the topic: beaver and terrestrial vs aquatic arthropod&#39;s ISD.</span>
+<span id="cb1-172"><a href="#cb1-172" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-173"><a href="#cb1-173" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-174"><a href="#cb1-174" aria-hidden="true" tabindex="-1"></a>::: callout-note</span>
+<span id="cb1-175"><a href="#cb1-175" aria-hidden="true" tabindex="-1"></a><span class="fu">### 19.09.2025: **3.45 hours**</span></span>
 <span id="cb1-176"><a href="#cb1-176" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-177"><a href="#cb1-177" aria-hidden="true" tabindex="-1"></a>Please note that when we talk about expectations we refer as a synonym of the word *hypotheses*.</span>
+<span id="cb1-177"><a href="#cb1-177" aria-hidden="true" tabindex="-1"></a>**from 08:15 till 12h**</span>
 <span id="cb1-178"><a href="#cb1-178" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-179"><a href="#cb1-179" aria-hidden="true" tabindex="-1"></a>Please read @pomeranz2024: Maximum likelihood outperforms binning methods for detecting differences in abundance size spectra across environmental gradients.</span>
+<span id="cb1-179"><a href="#cb1-179" aria-hidden="true" tabindex="-1"></a>This session will be online with Leonardo Capitani. Link with zoom (link <span class="co">[</span><span class="ot">here</span><span class="co">](https://us02web.zoom.us/j/7894473633?pwd=Wi83TXJyUGhwZytpU3lEWXJSaTl0UT09)</span>). You should use these 3.45 hours to:</span>
 <span id="cb1-180"><a href="#cb1-180" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-181"><a href="#cb1-181" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Answer this question: What is your expectation about question 1? Will $\lambda$ be higher or lower in beaver&#39;s influenced locations (inflow, pool, outflow) compared to control location?</span>
+<span id="cb1-181"><a href="#cb1-181" aria-hidden="true" tabindex="-1"></a>Please note that when we talk about expectations we refer as a synonym of the word *hypotheses*.</span>
 <span id="cb1-182"><a href="#cb1-182" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-183"><a href="#cb1-183" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Draw in your notebook the expectation for question 1 as a figure like @fig-gjoni</span>
+<span id="cb1-183"><a href="#cb1-183" aria-hidden="true" tabindex="-1"></a>Please read @pomeranz2024: Maximum likelihood outperforms binning methods for detecting differences in abundance size spectra across environmental gradients.</span>
 <span id="cb1-184"><a href="#cb1-184" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-185"><a href="#cb1-185" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Answer this question: What is your expectation in regards to question 2?</span>
+<span id="cb1-185"><a href="#cb1-185" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Answer this question: What is your expectation about question 1? Will $\lambda$ be higher or lower in beaver&#39;s influenced locations (inflow, pool, outflow) compared to control location?</span>
 <span id="cb1-186"><a href="#cb1-186" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-187"><a href="#cb1-187" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Draw in your notebook the expectation for question 2 as a figure like @fig-gjoni</span>
+<span id="cb1-187"><a href="#cb1-187" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Draw in your notebook the expectation for question 1 as a figure like @fig-gjoni</span>
 <span id="cb1-188"><a href="#cb1-188" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-189"><a href="#cb1-189" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>If you have</span>
-<span id="cb1-190"><a href="#cb1-190" aria-hidden="true" tabindex="-1"></a>:::</span>
-<span id="cb1-191"><a href="#cb1-191" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-192"><a href="#cb1-192" aria-hidden="true" tabindex="-1"></a>::: callout-note</span>
-<span id="cb1-193"><a href="#cb1-193" aria-hidden="true" tabindex="-1"></a><span class="fu">### 01.10.2025: 3.45 hours</span></span>
+<span id="cb1-189"><a href="#cb1-189" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Answer this question: What is your expectation in regards to question 2?</span>
+<span id="cb1-190"><a href="#cb1-190" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-191"><a href="#cb1-191" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Draw in your notebook the expectation for question 2 as a figure like @fig-gjoni</span>
+<span id="cb1-192"><a href="#cb1-192" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-193"><a href="#cb1-193" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Discuss and compare your expectations with your colleagues, Leonardo and Francesco. 10-15 min max.</span>
 <span id="cb1-194"><a href="#cb1-194" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-195"><a href="#cb1-195" aria-hidden="true" tabindex="-1"></a>**from 13 h till 16:45h**</span>
-<span id="cb1-196"><a href="#cb1-196" aria-hidden="true" tabindex="-1"></a>:::</span>
-<span id="cb1-197"><a href="#cb1-197" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-198"><a href="#cb1-198" aria-hidden="true" tabindex="-1"></a>::: callout-note</span>
-<span id="cb1-199"><a href="#cb1-199" aria-hidden="true" tabindex="-1"></a><span class="fu">### 03.10.2025: 3.45 hours</span></span>
-<span id="cb1-200"><a href="#cb1-200" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-201"><a href="#cb1-201" aria-hidden="true" tabindex="-1"></a>**from 08:15 till 12h**</span>
-<span id="cb1-202"><a href="#cb1-202" aria-hidden="true" tabindex="-1"></a>:::</span>
-<span id="cb1-203"><a href="#cb1-203" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-204"><a href="#cb1-204" aria-hidden="true" tabindex="-1"></a>::: callout-note</span>
-<span id="cb1-205"><a href="#cb1-205" aria-hidden="true" tabindex="-1"></a><span class="fu">### 08.10.2025: 3.45 hours</span></span>
+<span id="cb1-195"><a href="#cb1-195" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Decide which sampling method-arthropod community do you want to use.</span>
+<span id="cb1-196"><a href="#cb1-196" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-197"><a href="#cb1-197" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Are you able to load in R the processed data?</span>
+<span id="cb1-198"><a href="#cb1-198" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-199"><a href="#cb1-199" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Plot an histogram of the arthropod weight by location. See as an example, figures in <span class="in">`0_sampling_methods.html`</span></span>
+<span id="cb1-200"><a href="#cb1-200" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-201"><a href="#cb1-201" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-202"><a href="#cb1-202" aria-hidden="true" tabindex="-1"></a>::: callout-note</span>
+<span id="cb1-203"><a href="#cb1-203" aria-hidden="true" tabindex="-1"></a><span class="fu">### 01.10.2025: 3.45 hours</span></span>
+<span id="cb1-204"><a href="#cb1-204" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-205"><a href="#cb1-205" aria-hidden="true" tabindex="-1"></a>**from 13 h till 16:45h**</span>
 <span id="cb1-206"><a href="#cb1-206" aria-hidden="true" tabindex="-1"></a>:::</span>
 <span id="cb1-207"><a href="#cb1-207" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-208"><a href="#cb1-208" aria-hidden="true" tabindex="-1"></a>::: callout-note</span>
-<span id="cb1-209"><a href="#cb1-209" aria-hidden="true" tabindex="-1"></a><span class="fu">### 09.10.2025: 3.45 hours</span></span>
-<span id="cb1-210"><a href="#cb1-210" aria-hidden="true" tabindex="-1"></a>:::</span>
-<span id="cb1-211"><a href="#cb1-211" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-212"><a href="#cb1-212" aria-hidden="true" tabindex="-1"></a>::: callout-note</span>
-<span id="cb1-213"><a href="#cb1-213" aria-hidden="true" tabindex="-1"></a><span class="fu">### 10.10.2025: 3.45 hours</span></span>
-<span id="cb1-214"><a href="#cb1-214" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-215"><a href="#cb1-215" aria-hidden="true" tabindex="-1"></a>Leonardo and Francesco will not be present in this session. You should use these 3.45 hours to:</span>
-<span id="cb1-216"><a href="#cb1-216" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-217"><a href="#cb1-217" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>make one figure that answers question 1</span>
-<span id="cb1-218"><a href="#cb1-218" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-219"><a href="#cb1-219" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>make one figure that answers question 2</span>
-<span id="cb1-220"><a href="#cb1-220" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-221"><a href="#cb1-221" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Given your figure 1, what is the take home message of this figure? State it in one or two sentences. These sentences answer question 1.</span>
-<span id="cb1-222"><a href="#cb1-222" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-223"><a href="#cb1-223" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Given figure 2, what is the take home message of this figure? State it in one or two sentences. These sentences answer question 2.</span>
-<span id="cb1-224"><a href="#cb1-224" aria-hidden="true" tabindex="-1"></a>:::</span>
-<span id="cb1-225"><a href="#cb1-225" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-226"><a href="#cb1-226" aria-hidden="true" tabindex="-1"></a>::: callout-note</span>
-<span id="cb1-227"><a href="#cb1-227" aria-hidden="true" tabindex="-1"></a><span class="fu">### 15.10.2025: 3.45 + 3.45 hours</span></span>
+<span id="cb1-209"><a href="#cb1-209" aria-hidden="true" tabindex="-1"></a><span class="fu">### 03.10.2025: 3.45 hours</span></span>
+<span id="cb1-210"><a href="#cb1-210" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-211"><a href="#cb1-211" aria-hidden="true" tabindex="-1"></a>**from 08:15 till 12h**</span>
+<span id="cb1-212"><a href="#cb1-212" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-213"><a href="#cb1-213" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-214"><a href="#cb1-214" aria-hidden="true" tabindex="-1"></a>::: callout-note</span>
+<span id="cb1-215"><a href="#cb1-215" aria-hidden="true" tabindex="-1"></a><span class="fu">### 08.10.2025: 3.45 hours</span></span>
+<span id="cb1-216"><a href="#cb1-216" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-217"><a href="#cb1-217" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-218"><a href="#cb1-218" aria-hidden="true" tabindex="-1"></a>::: callout-note</span>
+<span id="cb1-219"><a href="#cb1-219" aria-hidden="true" tabindex="-1"></a><span class="fu">### 09.10.2025: 3.45 hours</span></span>
+<span id="cb1-220"><a href="#cb1-220" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-221"><a href="#cb1-221" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-222"><a href="#cb1-222" aria-hidden="true" tabindex="-1"></a>::: callout-note</span>
+<span id="cb1-223"><a href="#cb1-223" aria-hidden="true" tabindex="-1"></a><span class="fu">### 10.10.2025: 3.45 hours</span></span>
+<span id="cb1-224"><a href="#cb1-224" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-225"><a href="#cb1-225" aria-hidden="true" tabindex="-1"></a>Leonardo and Francesco will not be present in this session. You should use these 3.45 hours to:</span>
+<span id="cb1-226"><a href="#cb1-226" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-227"><a href="#cb1-227" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>make one figure that answers question 1</span>
 <span id="cb1-228"><a href="#cb1-228" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-229"><a href="#cb1-229" aria-hidden="true" tabindex="-1"></a>Francesco will be present in this session. You should use these 3.45 hours to:</span>
+<span id="cb1-229"><a href="#cb1-229" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>make one figure that answers question 2</span>
 <span id="cb1-230"><a href="#cb1-230" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-231"><a href="#cb1-231" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Communicate to Francesco what are the answers to question 1 and question 2 using the figures you have made. Make some bullets points on this topic.</span>
+<span id="cb1-231"><a href="#cb1-231" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Given your figure 1, what is the take home message of this figure? State it in one or two sentences. These sentences answer question 1.</span>
 <span id="cb1-232"><a href="#cb1-232" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-233"><a href="#cb1-233" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Answer and discuss with Francesco: Does these results support, contradict your expectations/hypothesis? Make some bullets points on that.</span>
-<span id="cb1-234"><a href="#cb1-234" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-235"><a href="#cb1-235" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Does your results support / contradict previous studies about arthropods ISD?</span>
-<span id="cb1-236"><a href="#cb1-236" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-237"><a href="#cb1-237" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Answer this question: Why are your results important for the Ecology community?</span>
+<span id="cb1-233"><a href="#cb1-233" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Given figure 2, what is the take home message of this figure? State it in one or two sentences. These sentences answer question 2.</span>
+<span id="cb1-234"><a href="#cb1-234" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-235"><a href="#cb1-235" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-236"><a href="#cb1-236" aria-hidden="true" tabindex="-1"></a>::: callout-note</span>
+<span id="cb1-237"><a href="#cb1-237" aria-hidden="true" tabindex="-1"></a><span class="fu">### 15.10.2025: 3.45 + 3.45 hours</span></span>
 <span id="cb1-238"><a href="#cb1-238" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-239"><a href="#cb1-239" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Answer this question: What are the caveats of your analysis ?</span>
-<span id="cb1-240"><a href="#cb1-240" aria-hidden="true" tabindex="-1"></a>:::</span>
-<span id="cb1-241"><a href="#cb1-241" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-242"><a href="#cb1-242" aria-hidden="true" tabindex="-1"></a><span class="fu">## References</span></span></code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal><i class="bi"></i></button></pre></div>
+<span id="cb1-239"><a href="#cb1-239" aria-hidden="true" tabindex="-1"></a>Francesco will be present in this session. You should use these 3.45 hours to:</span>
+<span id="cb1-240"><a href="#cb1-240" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-241"><a href="#cb1-241" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Communicate to Francesco what are the answers to question 1 and question 2 using the figures you have made. Make some bullets points on this topic.</span>
+<span id="cb1-242"><a href="#cb1-242" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-243"><a href="#cb1-243" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Answer and discuss with Francesco: Does these results support, contradict your expectations/hypothesis? Make some bullets points on that.</span>
+<span id="cb1-244"><a href="#cb1-244" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-245"><a href="#cb1-245" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Does your results support / contradict previous studies about arthropods ISD?</span>
+<span id="cb1-246"><a href="#cb1-246" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-247"><a href="#cb1-247" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Answer this question: Why are your results important for the Ecology community?</span>
+<span id="cb1-248"><a href="#cb1-248" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-249"><a href="#cb1-249" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Answer this question: What are the caveats of your analysis ?</span>
+<span id="cb1-250"><a href="#cb1-250" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-251"><a href="#cb1-251" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-252"><a href="#cb1-252" aria-hidden="true" tabindex="-1"></a><span class="fu">## References</span></span></code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 

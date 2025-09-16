@@ -139,7 +139,7 @@ If you are not willing to use the `isdbayes` package, you can use the `sizespect
 
 If you decide to use the `isdbayes` package, please read this README.rmd made by Wesner et al ([link](https://github.com/jswesner/isdbayes)).
 
-## To do 
+## To do
 
 ::: callout-note
 ### 17.09.2025: 1.45 hours
@@ -148,13 +148,13 @@ If you decide to use the `isdbayes` package, please read this README.rmd made by
 
 This session will be online with Leonardo Capitani. Link with zoom (link [here](https://us02web.zoom.us/j/7894473633?pwd=Wi83TXJyUGhwZytpU3lEWXJSaTl0UT09)). You should use these 1.45 hours to:
 
--   Read the file: `instructions.html`
+-   Read the file: `instructions.html.` Focus on open questions and expectations. Invest 30 min.
 
--   Read the file: `0_sampling_methods.html`
+-   Read the file: `0_sampling_methods.html.`Very briefly. Invest no more than 20 min.
 
--   Answer these questions:
+-   Read @moser paper. Focus on methods section. Invest no more than 15 min.
 
-\- Why did you choose this project?
+Answer these questions:
 
 \- How many sampling method did we use to sample the arthropods community?
 
@@ -165,10 +165,14 @@ This session will be online with Leonardo Capitani. Link with zoom (link [here](
 \- Have you ever heard about the statistical approach called *bayesian* ?
 
 Note the answers in your notebook, please.
+
+**At the end of this session, you should:**
+
+-   think and formulate an open question about the topic: beaver and terrestrial vs aquatic arthropod's ISD.
 :::
 
 ::: callout-note
-### 19.09.2025: **3.45 hours** 
+### 19.09.2025: **3.45 hours**
 
 **from 08:15 till 12h**
 
