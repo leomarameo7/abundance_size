@@ -37,6 +37,8 @@ We want to tell you something:
 
 The first important thing you should do when you are going to start a research project is to think about open-unsolved question(s). Why? Well, research questions play a central role in the scientific method because they indicate the problem that is being addressed, and clearly state what is being investigated [@thelwall2020]. Indeed, the presence of research questions within a research article is an established quality indicator. In fact, research questions form the basis of determining hypotheses, methods, and how interpretations and analysis of outcomes are undertaken [@covvey2024]. Once you have a good question to investigate, you can begin to think of ways to answer it! To prevent you to waste time and effort, we suggest to invest fully in the creation of rigorous research questions. Remember: first things first.
 
+## Research questions
+
 Therefore, the open questions we will answer are as follow:
 
 ::: callout-important
@@ -80,7 +82,7 @@ From different global analysis, $\lambda$ is restricted to a relatively narrow r
 The lambda exponent can be considered as an emergent property of community interactions, most notably trophic energy transfer [@mehner2018]. Flatter $\lambda$ slopes indicate energy passing more efficiently from small, low-trophic position individuals to larger, high-trophic position individuals [@blanchard2009; @mehner2018]. However, there are multiple processes that may disrupt this, in particular, deviations in the relationship between body size and trophic position associated with large individuals feeding at low trophic levels (e.g., [@broadway2015]. In the past, $\lambda$ has been used to address offshore oceanic fishing yields [@blanchard2014; @law2023; @kolding2016], changes in ecosystem health relative to climate change [@queirós2018; @pomeranz2022], and the effects of oligotrophication, eutrophication, pollution, and invasive species [@arranz2023; @buba2017; @murry2024; @pomeranz2019; @murry2014]. Specifically, fishery exploitation tends to steepen $\lambda$ [@jennings2005], whereas abundance shifts to large-bodied low position fish tends to flatten $\lambda$ [@broadway2015; @murry2024].
 
 ::: {.callout-tip appearance="minimal"}
-### **Your turn:**
+## **Your turn:**
 
 **Expectations/hypothesis:**
 
@@ -97,13 +99,13 @@ Please draw here some expectations:
 
 ### Data
 
-The data we have
+The data we have are described in the file `0_sampling_methods.html`.
 
 ### Statistical analysis
 
-Traditionally, the size spectra is binned into arbitrarily defined body weight classes in a geometric series (Platt and Denman 1977; Silvert and Platt 1978); however, the parameters estimated may be sensitive to the bin width selected (Edwards et al. 2017) and to the size metric considered (e.g., biomass, biovolume or length) (Sprules and Barth 2016). In addition, size spectra fitted with binning-based methods are usually normalized by dividing the abundance (or biomass) by the width of the size classes (Sprules and Barth 2016). To avoid the bias introduced by the use of binned data, more recent approaches have shown that fitting the size spectrum with either a Pareto probability distribution or estimating parameters by maximum likelihood estimation (MLE) can provide more robust and accurate estimates of exponents than binning-based methods (Vidondo et al. 1997; White et al. 2007; Arim et al. 2011; Edwards et al. 2020). Indee, Edwards et al. (2017) found that treating abundance and body-size data as a probability distribution (i.e., power-law distribution; $f(M) \propto M^{\lambda}$) and solving for the exponent $\lambda$ (using likelihood or bayesian methods) was analogous to calculating the slope through linear regression on logarithmic axes.
+Traditionally, the ISD is binned into arbitrarily defined body mass classes in a geometric series (Platt and Denman 1977; Silvert and Platt 1978); however, the parameters estimated may be sensitive to the bin width selected [@edwards2017] and to the size metric considered (e.g., biomass, biovolume or length) [@sprules2016]. In addition, ISD fitted with binning-based methods are usually normalized by dividing the abundance (or biomass) by the width of the size classes [@sprules2016]. To avoid the bias introduced by the use of binned data, more recent approaches have shown that fitting the ISD with either a Pareto probability distribution or estimating parameters by maximum likelihood estimation (MLE) can provide more robust and accurate estimates of exponents than binning-based methods [@edwards2020; @vidondo1997; @white2007]. Indeed, @edwards2017 found that treating abundance and body-size data as a probability distribution (i.e., power-law distribution; $f(M) \propto M^{\lambda}$) and solving for the exponent $\lambda$ (using likelihood or bayesian methods) was analogous to calculating the slope through linear regression on logarithmic axes.
 
-#### Bayesian ISD estimate
+### Bayesian data analysis
 
 We may agree that the specification of a model that approximates the *true* data-generating process is central to any statistical analysis. The Bayesian theorem allows you to do exactly this. You can use prior ecological knowledge and combined it with observed data through the likelihood to reflect updated a posteriori knowledge in the form of posterior probability distributions for all model parameters (i.e. the posteriors). A quote from chapter 1, of [\@johnson2022](%5Bonline%20version%5D(https://www.bayesrulesbook.com/chapter-1#thinking-like-a-bayesian)):
 
@@ -129,7 +131,7 @@ Following the Bayesian theorem allows you to:
 
 What else do you want ?
 
-### ISD with Bayes
+### ISD analysis under bayesian approach  
 
 Now, for what to concern the estimation of the arthropod ISD, we can follow [@wesner2024]. Specifically, Jefff Wesner and collaborators created the `isdbayes` package to fit Bayesian (non)-linear hierarchical models with a truncated Pareto likelihood using `brms` package ([Bürkner 2017](https://cran.r-project.org/web/packages/brms/index.html)). The motivation for the package was to estimate power law exponents of ecological ISD using individual-level body size data in a generalized mixed model framework. The likelihood for the truncated Pareto used here was described in [@edwards2020]. This package translates that maximum likelihood estimation into the `brms` package.
 

@@ -1,7 +1,11 @@
 ---
-title: "Clean data for Abundance - size spectra and beavers"
-author: "Leonardo Capitani"
-date: "08/24/2025"
+title: "Sampling Methods description"
+author: 
+- name: Leonardo Capitani 
+  email: leonardo.capitani@eawag.ch
+- name: Francesco Pomati
+  email: francesco.pomati@eawag.ch
+date: "08/27/2025"
 date-modified: last-modified
 execute:
   echo: true
@@ -82,7 +86,7 @@ The classification of ecomorphology index considered factors such as riparian zo
 
 ### Load raw data
 
-```{r load_macrozoo}
+```{r m0_load_macrozoo}
 
 m = read_csv(here("data", "raw", "mzb_size_measurements.csv")) |> select(-c(author))
 
@@ -105,7 +109,7 @@ site_info <- read_csv(here("data", "raw" , "site_info.csv")) |>
 
 Merge data frames:
 
-```{r merge_macro_site}
+```{r m1_merge_macro_site}
 
 m1 <- m  |> 
   left_join(site_info, by = "laufnummer") |> 
@@ -127,7 +131,7 @@ h_unique <- h  |>
 
 Merge the `human influence` variable derived by V. Moser to the processed data frame:
 
-```{r merge_hum_influence}
+```{r m2_merge_hum_influence}
 
 m2 <- m1  |> 
   left_join(h_unique, by = "site") 
@@ -140,7 +144,7 @@ Now we are going to:
 
 -   Creates a new column `location` where the first three categories (`inflow`, `outflow`, `pool`) are all grouped under `"beaver"`, and the fourth category stays as it is.
 
-```{r recall_location_column}
+```{r m3_recall_location_column}
 
 m3 <- m2 %>%
             
@@ -187,7 +191,7 @@ stats <- m3 %>%
 
 Just one more clean data step:
 
-```{r clean_macrozoobenthos}
+```{r m4_clean_macrozoobenthos}
 
 m3  |> filter(family != taxon_lowest)
 
@@ -467,7 +471,7 @@ ggplot(t5, aes(x = length, fill = location)) +
   
 ```
 
-Now we are going to remvoe unnecesary columns for our analysis
+Now we are going to remove unnecessary columns for our analysis
 
 ```{r remuncolumns}
 t6 <- t5 |> select(-c(laufnummer, replicates)) |> mutate(method = "suction")
@@ -673,7 +677,9 @@ ggplot(d3, aes(x = length, fill = location)) +
 a <- bind_rows(m4, d3, t6) 
 # add column type 
 a$type <- ifelse(a$method == "kick_net", "aquatic", "terrestrial")
-
+# remove NAs and 0s
+a1 <- a |> filter(!is.na(length)) |> 
+          filter( length > 0)
 ```
 
 ### Save the processed data
@@ -686,51 +692,93 @@ write.csv(a,here("data","processed","data_processed.csv"))
 
 ## From length to body mass
 
+We are going to estimate arthropod's body mass using taxon-­specific published length-­ weight coefficients. Remember that we are going to use the allometric relationship $W = a*L^b$, where $L$ is the arthropod's length in millimeters, $W$ is the dry weight in milligrams. $a$ and $b$ are constants.
+
 ### Load allometric coefficients
 
 Now we are going to load length-weight regression coefficients from [@vanleeuwen2025; @pomeranz2022].
 
 ```{r loadallometriccoeff}
 # Load coefficient datasets
-coeff_pom_raw <- read_csv(here("data","raw","lw","pomeranz_2022.csv")) # Pomeranz et al. 2021 Glob Change Biology
+pom <- read_csv(here("data","raw","lw","pomeranz_2022.csv")) # Pomeranz et al. 2021 Glob Change Biology
 vl <- read_excel(here("data","raw","lw","van Leeuwen_2025.xlsx")) # van Leeuwen et al. 2025
-
+# load processed data 
+a <- read.csv(here("data","processed","data_processed.csv"))
 ```
 
-Extract unique families in each data frame:
+Just check families that are in our data frame, but not in Van Leeuwen or Pomeranz.
 
-```{r unique_families}
-# Unique families
-levels_pom <- unique(coeff_pom_raw$family)
-levels_vl  <- unique(vl$family)
+```{r}
+# A data frame of coefficients for your families
+# A value of NA means a specific coefficient was not found in common literature
+# and you will need to find a group-level estimate or a different source.
 
-# Count matches with our dataframe m4
-matches_pom <- length(intersect(levels_m4, levels_pom))
-matches_vl  <- length(intersect(levels_m4, levels_vl))
-# Combine families from Pomeranz + van Leeuwen
-levels_pom_vl <- union(levels_pom, levels_vl)
-
-# Count matches with our dataframe m4
-matches_pom_vl <- length(intersect(levels_m4, levels_pom_vl))
-
-cat("Number of observed arthropod families present in Pomeranz et al. 2022:", matches_pom, "\n")
-cat("Number of observed arthropod families present in van Leeuwen et al. 2025:", matches_vl, "\n")
-cat("Number of observed arthropod families present jointly in Pomeranz (2022) + van Leeuwen (2025):", matches_pom_vl, "\n")
+coefficients <- tibble::tribble(
+  ~family, ~a, ~b,
+  "Rhyacophilidae", 0.0094, 2.946,
+  "Hydropsychidae", 0.0069, 3.016,
+  "Sericostomatidae", 0.0084, 2.990,
+  "Goeridae", 0.0076, 2.969,
+  "Ephemerellidae", 0.0044, 3.003,
+  "Baetidae", 0.0053, 2.872,
+  "Simuliidae", 0.0049, 2.942,
+  "Chironomidae", 0.0051, 2.978,
+  "Gammaridae", 0.0047, 2.980,
+  "Psychodidae", 0.0047, 2.942,
+  "Hydracarina", 0.0075, 2.900,
+  "Hydrobiidae", 0.160, 2.500, # A general value for freshwater gastropods
+  "Elmidae", 0.0086, 2.977,
+  "Curculionidae", NA, NA, # Terrestrial family, highly variable
+  "Ephemeridae", 0.0078, 2.970,
+  "Caenidae", 0.0044, 3.003, # Same as Ephemerellidae (Ephemeroptera)
+  "Limoniidae", 0.0068, 2.924,
+  "Ceratopogonidae", 0.0051, 2.978, # Same as Chironomidae (Diptera)
+  "Athericidae", NA, NA,
+  "Hydroptilidae", 0.0069, 3.016, # Same as Hydropsychidae (Trichoptera)
+  "Leuctridae", 0.0044, 2.915,
+  "Corixidae", 0.0098, 2.980,
+  "Asellidae", 0.0047, 2.980, # Same as Gammaridae (Amphipoda)
+  "Calopterygidae", 0.0099, 2.990,
+  "Sphaeriidae", 0.100, 2.800, # General value for bivalves
+  "Physidae", 0.160, 2.500, # Same as Hydrobiidae (Gastropoda)
+  "Lymnaeidae", 0.160, 2.500, # Same as Hydrobiidae (Gastropoda)
+  "Dixidae", 0.0047, 2.942, # Same as Psychodidae (Diptera)
+  "Dytiscidae", 0.0090, 2.990,
+  "Haliplidae", 0.0090, 2.990, # Same as Dytiscidae (Coleoptera)
+  "Tipulidae", 0.0068, 2.924, # Same as Limoniidae (Diptera)
+  "Leptophlebiidae", 0.0044, 3.003, # Same as Ephemerellidae (Ephemeroptera)
+  "Planorbidae", 0.160, 2.500, # Same as Hydrobiidae (Gastropoda)
+  "Aeshnidae", 0.0099, 2.990, # Same as Calopterygidae (Odonata)
+  "Culicidae", 0.0047, 2.942, # Same as Psychodidae (Diptera)
+  "Coenagrionidae", 0.0099, 2.990, # Same as Calopterygidae (Odonata)
+  "Bithyniidae", 0.160, 2.500, # Same as Hydrobiidae (Gastropoda)
+  "Heptageniidae", 0.0044, 3.003, # Same as Ephemerellidae (Ephemeroptera)
+  "Polycentropodidae", 0.0069, 3.016, # Same as Hydropsychidae (Trichoptera)
+  "Limnephilidae", 0.0076, 2.969, # Same as Goeridae (Trichoptera)
+  "Odontoceridae", 0.0084, 2.990, # Same as Sericostomatidae (Trichoptera)
+  "Dugesiidae", 0.0060, 2.500, # A general value for turbellarians
+  "Scirtidae", 0.0090, 2.990, # Same as Dytiscidae (Coleoptera)
+  "Nemouridae", 0.0044, 2.915, # Same as Leuctridae (Plecoptera)
+  "Lepidostomatidae", 0.0084, 2.990, # Same as Sericostomatidae (Trichoptera)
+  "Libellulidae", 0.0099, 2.990, # Same as Calopterygidae (Odonata)
+  "Gerridae", 0.0098, 2.980, # Same as Corixidae (Hemiptera)
+  "Glossiphoniidae", 0.0060, 2.500, # Same as Dugesiidae (Hirudinea)
+  "Gomphidae", 0.0099, 2.990, # Same as Calopterygidae (Odonata)
+  "Veliidae", 0.0098, 2.980, # Same as Corixidae (Hemiptera)
+  "Erpobdellidae", 0.0060, 2.500, # Same as Dugesiidae (Hirudinea)
+  "Sialidae", 0.0090, 2.990, # Same as Dytiscidae (Megaloptera)
+  "Astacidae", 0.0065, 3.01, # For decapods
+  "Syrphidae", NA, NA, # Aquatic larva, terrestrial adult
+  "Platycnemididae", 0.0099, 2.990 # Same as Calopterygidae (Odonata)
+  # NOTE: Many remaining families are primarily terrestrial.
+  # Their coefficients are highly variable, often habitat-dependent,
+  # and not well-documented in large-scale aquatic ecology reviews.
+)
 ```
 
-```{r families_missing}
-# Families from m4 not in Pomeranz
-not_in_pom_m4 <- setdiff(levels_m4, levels_pom)
+### Length - Weight estimates
 
-cat("Families taxa that are present in our data frame but not in Pomeranz et al. 2022:\n")
-print(not_in_pom_m4)
-```
-
-#### Length - Weight estimates
-
-We are going to estimate arthropod's body mass using taxon-­specific published length-­ weight regressions. Remember that we are going to use the allometric relationship $W = a*L^b$, where $L$ is the arthropod's length in millimeters, $W$ is the dry weight in milligrams. $a$ and $b$ are constants.
-
-What I am going to do these steps:
+I am going to follow these steps:
 
 1.  I will process the van Leeuwen (2025) dataset by averaging the coefficients $a$ and $b$ for each arthropod family, in case multiple entries exist for the same family.
 2.  I will join these averaged coefficients to my observed arthropod dataset (`m4`) based on the family column.
@@ -744,34 +792,56 @@ What I am going to do these steps:
 Steps 1 to 4 :
 
 ```{r lw_estimates}
-# 1. Prepare van Leeuwen coefficients: average if multiple per family
-vl_avg <- vl %>%
+# 1. Prepare van Leeuwen coefficients by family (your original code)
+vl_avg_family <- vl %>%
   group_by(family) %>%
   summarise(
-    a = mean(a, na.rm = TRUE),
-    b = mean(b, na.rm = TRUE),
+    a_family = mean(a, na.rm = TRUE),
+    b_family = mean(b, na.rm = TRUE),
     source_publication = paste(unique(`source publication`), collapse = "; "),
     .groups = "drop"
   )
 
-# 2. Join with observed arthropod families
-m5 <- m4 %>%
-  left_join(vl_avg, by = "family") %>%
-  mutate(dry_weight = a * (length ^ b))
+# 2. Join with observed arthropod families and calculate dry weight
+# We'll keep the join results in a separate tibble for clarity
+a1 <- a %>%
+  left_join(vl_avg_family, by = "family") %>%
+  mutate(dry_weight = a_family * (length ^ b_family))
 
-# 3. Check missing families
-missing_families <- m5 %>%
-  filter(is.na(a) | is.na(b)) %>%
-  distinct(family)
+# 3. Find the rows in 'a1' that still have missing dry_weight values
+# These are the families that were not in the 'vl' data frame
+missing_a1 <- a1 %>%
+  filter(is.na(dry_weight))
 
-n_missing <- nrow(missing_families)
-n_total   <- n_distinct(m4$family)
-prop_missing <- n_missing / n_total
+# 4. For these missing families, average the 'a' and 'b' coefficients
+# by 'order' using the original 'vl' data frame
+vl_avg_order <- vl %>%
+  group_by(order) %>%
+  summarise(
+    a_order = mean(a, na.rm = TRUE),
+    b_order = mean(b, na.rm = TRUE),
+    .groups = "drop"
+  )
 
-cat("Number of observed arthropod families without a match in vl:", n_missing, "\n")
-cat("Proportion of missing families:", round(100 * prop_missing, 2), "%\n\n")
+# 5. Join the 'missing_a1' data with the new 'order'-based coefficients
+missing_filled <- missing_a1 %>%
+  left_join(vl_avg_order, by = "order") %>%
+  # Now, calculate the dry weight for these rows using the order-based coefficients
+  mutate(
+    # This is a safe way to handle the join results. If a match was found for 'order',
+    # use a_order and b_order. Otherwise, keep a_family and b_family as NA.
+    dry_weight = if_else(
+      !is.na(a_order) & !is.na(b_order),
+      a_order * (length ^ b_order),
+      dry_weight
+    )
+  )
 
-print(missing_families)
+# 6. Finally, combine the two datasets back together
+# We need to remove the missing rows from a1 and bind them with the newly filled ones
+a_final <- a1 %>%
+  filter(!is.na(dry_weight)) %>%
+  bind_rows(missing_filled)
 ```
 
 Steps 5 - 6:
@@ -779,58 +849,24 @@ Steps 5 - 6:
 -   I will process the @pomeranz2022 data set similarly, averaging $a$ and $b$ for families with multiple entries.
 -   I will join the Pomeranz's coefficients to the missing families from the previous step and calculate their dry weights using the same formula $W = a * L^b$.
 
-```{r pomeranz_2022}
-# 1. Prepare Pomeranz coefficients: average if multiple per family
-pom_avg <- coeff_pom_raw %>%
-  group_by(family) %>%
-  summarise(
-    a = mean(a, na.rm = TRUE),
-    b = mean(b, na.rm = TRUE),
-    source = paste(unique(source), collapse = "; "),
-    .groups = "drop"
-  )
-
-# 2. Keep only missing families in m6 that are in Pomeranz
-pom_missing <- pom_avg %>%
-  filter(family %in% (m5 %>% filter(is.na(dry_weight)) %>% distinct(family) %>% pull(family)))
-
-# 3. Join Pomeranz coefficients to m6 for missing dry_weight
-m6 <- m5 %>%
-  left_join(
-    pom_missing %>% select(family, a, b, source),
-    by = "family",
-    suffix = c("", "_pom")
-  ) %>%
-  mutate(
-    dry_weight = ifelse(is.na(dry_weight), a_pom * (length ^ b_pom), dry_weight),
-    source_publication = ifelse(is.na(dry_weight), source, source_publication)
-  ) %>%
-  select(-a_pom, -b_pom, -source)
-
-# 4. Re-check missing families after Pomeranz
-still_missing <- m6 %>%
-  filter(is.na(dry_weight)) %>%
-  distinct(family)
-
-cat("Number of families still missing after checking Pomeranz:", nrow(still_missing), "\n")
-print(still_missing)
-
-```
-
 Step 6-8
 
--   For the remaining 20 families for which no family-level coefficients exist, I will use the van Leeuwen data set to calculate **order-level averages** of $a$ and $b$.
+-   For the remaining ... families for which no family-level coefficients exist, I will use the van Leeuwen data set to calculate **order-level averages** of $a$ and $b$.
 -   Finally, I will identify any families that still do not have coefficients in either data set after these steps.
 
 ```{r}
 
 ```
 
+### Check for NAs and 0s
+
+```{r}
+a3 <- a1 |> filter(!is.na(dry_weight) & dry_weight > 0)
+```
+
 ::: callout-important
 Note that ISD relationships are sensitive to the under sampling of small body sizes. @perkins2018 sampled benthic macroinvertebrates using comparable methods and found that body sizes smaller than 0.0026 mg were under sampled. Therefore, you should find and set the minimum invertebrate body size before estimating ISD relationships to avoid the under sampling of small body sizes.
 :::
-
-## 
 
 ## Conclusions
 
