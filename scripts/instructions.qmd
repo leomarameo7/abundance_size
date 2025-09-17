@@ -150,9 +150,9 @@ This session will be online with Leonardo Capitani. Link with zoom (link [here](
 
 -   Read the file: `instructions.html.` Focus on open questions and expectations. Invest 30 min.
 
--   Read the file: `0_sampling_methods.html.`Very briefly. Invest no more than 20 min.
+-   Read the file: `0_sampling_methods.html.`Focus on the **Description** sections. Invest no more than 20 min.
 
--   Read @moser paper. Focus on methods section. Invest no more than 15 min.
+-   Read @moser paper. Focus on **methods** section. Invest no more than 15 min.
 
 Answer these questions:
 
@@ -168,7 +168,7 @@ Note the answers in your notebook, please.
 
 **At the end of this session, you should:**
 
--   think and formulate an open question about the topic: beaver and terrestrial vs aquatic arthropod's ISD.
+-   think and formulate an open question about the research project: beaver and terrestrial vs aquatic arthropod's ISD.
 :::
 
 ::: callout-note
@@ -203,26 +203,40 @@ Please read @pomeranz2024: Maximum likelihood outperforms binning methods for de
 ### 01.10.2025: 3.45 hours
 
 **from 13 h till 16:45h**
+
+This session will be at Eawag (FXB 01) with Leonardo Capitani. You should use these 3.45 hours to:
+
+-   Get used to the `brms` package syntax
+
+-   Build your first simple model with only an intercept and one predictor (`location`).
+
+-   Do prior predictive checks with this model
 :::
 
 ::: callout-note
 ### 03.10.2025: 3.45 hours
 
 **from 08:15 till 12h**
+
+This session will be at Eawag (FXB 01) with Leonardo Capitani. You should use these 3.45 hours to:
 :::
 
 ::: callout-note
 ### 08.10.2025: 3.45 hours
+
+This session will be at Eawag (FXB 01) with Leonardo Capitani. You should use these 3.45 hours to:
 :::
 
 ::: callout-note
 ### 09.10.2025: 3.45 hours
+
+This session will be at Eawag (FXB 01) with Leonardo Capitani. You should use these 3.45 hours to:
 :::
 
 ::: callout-note
 ### 10.10.2025: 3.45 hours
 
-Leonardo and Francesco will not be present in this session. You should use these 3.45 hours to:
+Leonardo and Francesco will be absent in this session. You should use these 3.45 hours to:
 
 -   make one figure that answers question 1
 

@@ -23,8 +23,6 @@ bibliography: references.bib
 csl: eco_lett.csl
 ---
 
-## Load packages
-
 ```{r load_libraries}
 
 library(tidyverse)
@@ -187,16 +185,34 @@ stats <- m3 %>%
   )
 ```
 
+Just one more clean data step:
+
+```{r clean_macrozoobenthos}
+
+m3  |> filter(family != taxon_lowest)
+
+# since there are no difference between the two columns, we remove one of them 
+
+m4 <- m3|> select(-taxon_lowest, -laufnummer) 
+```
+
+### Save the processed data: 
+
+```{r save_kicknet_processed}
+
+write.csv(m4, here("data","processed", "kicknet_clean.csv" ))
+```
+
 ### Visualize
 
 ```{r plot_macro}
-# Alternative: side-by-side histogram (use 'dodge')
+
 ggplot(m3, aes(x = length, fill = location)) +
   geom_histogram(binwidth = 1, color = "black", alpha = 0.3, position = "dodge") +
   labs(
     title = "Histogram of arthropod ISD by location (kick net method)",
     x = "Length (mm)",
-    y = "Frequency",
+    y = "Abundance",
     fill = "Location"
   ) + 
   geom_text(
@@ -211,34 +227,9 @@ ggplot(m3, aes(x = length, fill = location)) +
   facet_wrap(~location) 
 ```
 
-Save the data to `processed` folder
+### How many families did we catch?
 
-```{r save_macro_to_processed}
-
-write.csv(m3, here( "data","processed", "m3.csv"  ))
-
-```
-
-### Families
-
-First let's check which families are there !
-
-#### Load processed data
-
-```{r load_processed_macrozoobenthos}
-
-m3 <- read_csv( here("data", "processed", "m3.csv")) 
-
-m3  |> filter(family != taxon_lowest)
-
-# since there are no difference between the two columns, we remove one of them 
-
-m4 <- m3|> select(-taxon_lowest, -laufnummer) 
-```
-
-#### How many families are there?
-
-Extract unique combination of order - family and check how many families are there.
+First let's check which families are there ! We will extract unique combination of order - family and check how many families are there.
 
 ```{r howmanyfamilies}
 
@@ -367,6 +358,334 @@ datatable(
 )
 ```
 
+## Suction: terrestrial invertebrates community
+
+### **Description**
+
+This data was collected by Ph.D student Valentin Moser and Master students in 2021 and 2022 within 16 different streams in Switzerland. In each stream they sampled in 4 locations: `control`, `inflow`, `pool`, `outflow`. They sampled terrestrial arthropods by using a 5 x 1 m plots located at three different point-locations (i.e. column `point`): one meter from the stream's edge (**1**), at 2 times the pool width distance (**2**) and 3 times the pool width distance (**3**) (i.e.,orange points in @fig-suctiondesign. Within each plot, they sampled the arthropods at the two ends of the 5 x 1 m plot in cylindrical baskets (50 cm diameter, 67 cm height, woven fabric) using suction sampling on a sunny day between 10:00-17:00 during peak arthropod activity @fig-suction. The samples were stored in ethanol, individuals were counted, measured and identified to order level with the help of a binocular.
+
+![Sampling design for terrestrial arthropods sampling. The numbers represent sampled locations. This figure was adapted from Valentin Moser et al. 2025 J. Animal Ecology](images/sampling_design_suction_method-02.png){#fig-suctiondesign}
+
+[![Suction sampling for arthropods. Foto credit: Valentin Moser.](images/succion_2.JPG){#fig-suction}](https://onlinelibrary.wiley.com/doi/10.1111/eea.12952)
+
+### Load raw data
+
+```{r load_suction_data_2021}
+
+t = read_csv(here("data","raw","suction_clean.csv")) |> rename(replicates = point_rep)
+
+```
+
+```{r makenewcolumn}
+t2 <- t  |> 
+  mutate(
+    point    = str_extract(sample, "(?<=_)\\d+"),   # extract number
+    location = str_remove(sample, "_\\d+$")        # remove suffix
+  )  |> 
+  relocate(location, point, .after = site) %>%     # put after site
+  relocate(replicates, .after = point) %>%         # ensure replicates stays after point
+  select(-sample)                                  # drop old column if not needed
+```
+
+### Add predictors
+
+**Pond area and ecomorphology**
+
+First we add the area of the beaver pond, and the stream ecomorphology.
+
+```{r add_predictors_suctions}
+# load site info 
+
+site_info <- read_csv(here("data", "raw" , "site_info.csv")) |> select (c(2,19,23)) 
+# meerge site info to t21 df 
+t3 <- t2 %>%
+  left_join(site_info, by = "laufnummer") 
+
+# To see rows with NA in size
+t4 <-  t3 %>% filter(!is.na(length))
+```
+
+**Human influence**
+
+Then we add the `human_influence` variable:
+
+```{r add_humn_influence_suction}
+
+t5 <- t4 |>
+  left_join(h_unique, by = "site") 
+```
+
+Get some summery statistics
+
+```{r summery_stats}
+# calculate summary stats
+stats <- t5 %>%
+  group_by(location) %>%
+  summarise(
+    n = n(),
+    mean = mean(length, na.rm = TRUE),
+    sd = sd(length, na.rm = TRUE),
+    median = median(length, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    label = paste0("n=", n, 
+                   "\nmean=", round(mean, 2),
+                   "\nsd=", round(sd, 2),
+                   "\nmedian=", round(median, 2))
+  )
+```
+
+### Visualize
+
+```{r histo_suction}
+
+ggplot(t5, aes(x = length, fill = location)) +
+  geom_histogram(
+    binwidth = 1,
+    position = "identity",
+    alpha = 0.4,
+    color = "black"
+  ) +
+  geom_text(
+    data = stats,
+    aes(
+      x = 35,                # fixed at 20 mm
+      y = 5000,          # map y to location
+      label = paste0("n=", n, "\nmean=", round(mean, 2),
+                     "\nsd=", round(sd,2),
+                     "\nmedian=", round(median,2))
+    ))+
+  facet_wrap(~location) +
+  labs(
+    title = "ISD by location for suction sampling",
+    subtitle = "Note that points 1, 2 , 3 were aggrgated by location",
+    y = "Abundance",
+    x = "Size (mm)"
+  )+ 
+  scale_x_continuous(limits = c(0,20))
+  
+```
+
+Now we are going to remvoe unnecesary columns for our analysis
+
+```{r remuncolumns}
+t6 <- t5 |> select(-c(laufnummer, replicates)) |> mutate(method = "suction")
+```
+
+### Save the processed data: 
+
+```{r save_suction}
+
+write.csv(t6, here("data","processed","suction_clean.csv"))
+```
+
+## Interception trap: flying arthropods community
+
+### **Description**
+
+We are going to load the raw data collected by Ph.D. student [Valentin Moser](https://www.wsl.ch/de/mitarbeitende/moserval/) and research assistants during June 2021 in **eight** different beaver dammed streams (@fig-moserflying) within the WSL-Eawag project: [Species interactions in beaver engineered habitats link land-water ecosystem processes](https://www.wsl.ch/de/projekte/sfsf/). They have sampled in two locations within each site: the main pond created by the beaver (i.e. `pool` factor level within the column `location`) and 500 meters upstream of that pond (i.e. `control` factor level within the column `location`). Please refer to [@moser2025] for detailed sampling method.
+
+![From Moser et al. 2025. Habitat heterogeneity and food availability in beaver-engineered streams foster bat richness, activity and feeding. Journal of Animal Ecology](images/RR_discussion.001-01.png){#fig-moserflying fig-align="center"}
+
+In the folder `data/raw` you will find: `data_arthropods_flying.xlsx`
+
+Flying arthropods were collected by interception traps (surface area 0.25 $m^2$) covered with 500 $\mu m$ net during 10 days.
+
+![Example of the interception trap used to collect flying arthropods. Credits to Valentin Moser.](images/emergent_trap.png){#fig-lily fig-align="center"}
+
+### Load raw data
+
+```{r load_raw_data}
+
+d <- readxl::read_xlsx(path = here("data", "raw","data_arthropods_flying.xlsx"), sheet = 1) |> 
+select(-c(sort, remarks))|> # remove unnecesary column
+ filter( !is.na(size) )|>  # remvoe NAs observations 
+rename(length = size)
+
+head(d)
+```
+
+```{r metadata}
+
+data_dict <- data.frame(
+  Column_name = c(
+    "site", "location", "date", "class", "order", "suborder", "family",
+    "subfamily", "juvenile", "terrestrial", "juv aquatic", "unusable",
+    "length", "remarks"
+  ),
+  Explanation = c(
+    "Study system in which the individual was sampled",
+    "Site at which individual was sampled (i.e. pool or control)",
+    "Collection period during which the individual was sampled (i.e. June or July)",
+    "Taxonomic class the sampled individual belongs to",
+    "Taxonomic order the sampled individual belongs to",
+    "Taxonomic suborder the sampled individual belongs to (where available)",
+    "Taxonomic family the sampled individual belongs to (where available)",
+    "Taxonomic subfamily the sampled individual belongs to (where available)",
+    "Binary value indicating if the sampled individual was a juvenile. 1 = juvenile, 0 = adult",
+    "Binary value indicating if the sampled individual was winged. 1 = non-winged, 0 = winged",
+    "Binary value indicating if the sampled individual belongs to a taxa with purely aquatic juveniles. 1 = aquatic, 0 = not aquatic",
+    "Binary value indicating if the sampled individual came from water (amphipoda, gastropoda)",
+    "Length of the sampled individual in mm (rounded to full numbers). Measured from head to end of abdomen, excluding appendages (wings, limbs, antennae, cerci, etc.)",
+    "Additional comments or information about a given individual"
+  )
+)
+
+kable(data_dict, align = c("l","l"), caption = "Metadata for data_arthropods_flying.xlsx")
+
+
+```
+
+Now we are going to remove unnecessary columns
+
+```{r removcolumns}
+
+d1 <- d |> select(-c("date","class" ,"suborder" ,"subfamily" ,"juvenile","terrestrial", "juv.aquatic" ,"unusable", )) |> rename(laufnummer = Laufnummer)
+```
+
+### Add predictors
+
+Add beaver pond area (`area_pool`) and stream ecomorphology.
+
+```{r add_predictors}
+site_info <- read_csv(here("data", "raw" , "site_info.csv")) |> 
+  select (c(2:5,8,9,19,23)) |> 
+  select(-c(site, sample))
+
+d2 <- d1  |> 
+  left_join(site_info[c(1,5,6)], by = "laufnummer") |> 
+  mutate(method = "intercept_trap") |> 
+  mutate(site = recode(site,
+    "Chrie" = "Chriesbach",
+    "Coruz" = "Coruz",
+    "Gaebe" = "Gaebelbach",
+    "Hasli" = "Haslibach",
+    "Leuge" = "Leugene",
+    "Riedg" = "Riedgrabe",
+    "Talen" = "Talent",
+    "Weier" = "Weierbach"
+  ))
+```
+
+Add `human influence` variable:
+
+```{r add_human_influence2}
+
+d3 <- d2 |> 
+  left_join(h_unique, by = "site") |> 
+  select(-laufnummer)
+```
+
+```{r save_intercept_trap}
+
+write.csv(d3, here("data","processed","intercept_clean.csv"))
+```
+
+**Question:**
+
+How many taxa are there?
+
+```{r get_unique_taxa_families}
+# Get unique families (excluding NA)
+families <- unique(na.omit(d3$family))
+
+# Number of unique families
+num_families <- length(families)
+
+# Print results
+cat("Number of unique families:", num_families, "\n\n")
+cat("Families:\n")
+print(sort(families))
+```
+
+Description of the families we have found:
+
+```{r list_families}
+# Families Found Near Streams in Switzerland
+
+families_table <- data.frame(
+  Family = c(
+    "Aphidoidea", "Cantharidae", "Carabidae", "Chrysomelidae",
+    "Coccinellidae", "Cucujidae", "Curculionidae", "Dytiscidae",
+    "Elmidae", "Erebidae", "Forficulidae", "Formicidae",
+    "Gerridae", "Gyrinidae", "Haliplidae", "Hydrophilidae",
+    "Latridiidae", "Monotomidae", "Mordellidae", "Nitidulidae",
+    "Notonectidae", "Panorpidae", "Phalacridae", "Psylloidea",
+    "Scirtidae", "Staphylinidae", "Syrphidae", "Tabanidae",
+    "Vespidae"
+  ),
+  Description = c(
+    "Aphids; plant sap-feeders, often found on riparian vegetation.",
+    "Soldier beetles; predatory or nectar-feeding, common in meadows near water.",
+    "Ground beetles; many species are predators along stream banks.",
+    "Leaf beetles; herbivores on riparian plants.",
+    "Lady beetles; mostly aphid predators on vegetation.",
+    "Flat bark beetles; live under bark, sometimes in moist riparian wood.",
+    "Weevils; herbivores feeding on riparian plants and shrubs.",
+    "Predaceous diving beetles; aquatic predators in streams and ponds.",
+    "Riffle beetles; aquatic, live attached to stones in running water.",
+    "Tiger moths and relatives; larvae feed on diverse plants near water.",
+    "Earwigs; omnivores hiding under stones and wood along streams.",
+    "Ants; common in soils and vegetation along riparian zones.",
+    "Water striders; aquatic predators skating on water surfaces.",
+    "Whirligig beetles; fast swimmers on water surfaces in streams.",
+    "Crawling water beetles; small herbivorous beetles in shallow water.",
+    "Water scavenger beetles; aquatic or semi-aquatic scavengers.",
+    "Minute brown scavenger beetles; found in decaying plant matter.",
+    "Root-eating beetles; often associated with decaying wood.",
+    "Tumbling flower beetles; found on flowers near riparian habitats.",
+    "Sap beetles; feed on decaying fruit, fungi, and plant material.",
+    "Backswimmers; aquatic predators that swim upside down.",
+    "Scorpionflies; scavengers, often in damp shaded stream habitats.",
+    "Shining flower beetles; small pollen feeders.",
+    "Psyllids; plant sap-feeders, often on riparian trees and shrubs.",
+    "Marsh beetles; aquatic or semi-aquatic beetles in wetlands.",
+    "Rove beetles; very diverse predators and scavengers in moist habitats.",
+    "Hoverflies; larvae are aphid predators, adults visit flowers.",
+    "Horse flies; adults feed on blood or nectar, larvae in wet soils.",
+    "Wasps; diverse group of predators and parasitoids near water."
+  )
+)
+
+kable(families_table, caption = "Ecological roles of arthropod families sampled close to streams in Switzerland")
+
+```
+
+### Visualize
+
+```{r pot_histogram}
+
+ggplot(d3, aes(x = length, fill = location)) +
+  geom_histogram(binwidth = 1, color = "black", alpha = 0.7, position = "dodge") +
+  labs(
+    title = "Individual Size Distribution histogram by sampled location (intercept trap)",subtitle = "Note that we have sampled Control and Pool locations in 8 sites",
+    x = "Size (mm)",
+    y = "Abundance (number of individuals)",
+    fill = "Location"
+  ) 
+```
+
+## Merge all three methods
+
+```{r meerge}
+
+a <- bind_rows(m4, d3, t6) 
+# add column type 
+a$type <- ifelse(a$method == "kick_net", "aquatic", "terrestrial")
+
+```
+
+### Save the processed data
+
+```{r save_data_all}
+
+write.csv(a,here("data","processed","data_processed.csv"))
+
+```
+
+## From length to body mass
+
 ### Load allometric coefficients
 
 Now we are going to load length-weight regression coefficients from [@vanleeuwen2025; @pomeranz2022].
@@ -413,13 +732,13 @@ We are going to estimate arthropod's body mass using taxon-­specific published 
 
 What I am going to do these steps:
 
-1.  I will process the van Leeuwen (2025) dataset by averaging the coefficients $a$ and $b$ for each arthropod family, in case multiple entries exist for the same family.\
-2.  I will join these averaged coefficients to my observed arthropod dataset (`m4`) based on the family column.\
-3.  I will calculate the dry weight of each individual using the regression formula $W = a * L^b$, where $W$ is dry weight and $L$ is body length.\
-4.  For families in `m4` that do not have a corresponding $a$ and $b$ in [@vanleeuwen2025], I will identify them as missing.\
-5.  I will process the Pomeranz (2022) dataset similarly, averaging $a$ and $b$ for families with multiple entries.\
-6.  I will join the Pomeranz coefficients to the missing families from the previous step and calculate their dry weights using the same formula $W = a * L^b$.\
-7.  For the remaining 20 families for which no family-level coefficients exist, I will use the van Leeuwen data set to calculate **order-level averages** of $a$ and $b$.\
+1.  I will process the van Leeuwen (2025) dataset by averaging the coefficients $a$ and $b$ for each arthropod family, in case multiple entries exist for the same family.
+2.  I will join these averaged coefficients to my observed arthropod dataset (`m4`) based on the family column.
+3.  I will calculate the dry weight of each individual using the regression formula $W = a * L^b$, where $W$ is dry weight and $L$ is body length.
+4.  For families in `m4` that do not have a corresponding $a$ and $b$ in [@vanleeuwen2025], I will identify them as missing.
+5.  I will process the Pomeranz (2022) dataset similarly, averaging $a$ and $b$ for families with multiple entries.
+6.  I will join the Pomeranz coefficients to the missing families from the previous step and calculate their dry weights using the same formula $W = a * L^b$.
+7.  For the remaining 20 families for which no family-level coefficients exist, I will use the van Leeuwen data set to calculate **order-level averages** of $a$ and $b$.
 8.  Finally, I will identify any families that still do not have coefficients in either data set after these steps.
 
 Steps 1 to 4 :
@@ -511,293 +830,7 @@ Step 6-8
 Note that ISD relationships are sensitive to the under sampling of small body sizes. @perkins2018 sampled benthic macroinvertebrates using comparable methods and found that body sizes smaller than 0.0026 mg were under sampled. Therefore, you should find and set the minimum invertebrate body size before estimating ISD relationships to avoid the under sampling of small body sizes.
 :::
 
-## Suction: terrestrial invertebrates community
-
-### **Description**
-
-This data was collected by Ph.D student Valentin Moser and Master students in 2021 and 2022 within 16 different streams in Switzerland. In each stream they sampled in 4 locations: `control`, `inflow`, `pool`, `outflow`. They sampled terrestrial arthropods by using a 5 x 1 m plots located at three different point replicates (`point_rep`): one meter from the stream's edge (**1**), at 2 times the pool width distance (**2**) and 3 times the pool width distance (**3**) (i.e.,orange points in @fig-suctiondesign. Within each plot, they sampled the arthropods at the two ends of the 5 x 1 m plot in cylindrical baskets (50 cm diameter, 67 cm height, woven fabric) using suction sampling on a sunny day between 10:00-17:00 during peak arthropod activity @fig-suction. The samples were stored in ethanol, individuals were counted, measured and identified to order level with the help of a binocular.
-
-![Sampling design for terrestrial arthropods sampling. The numbers represent point replicates for each location sampled. This figure was adapted from Valentin Moser et al. 2025 J. Animal Ecology](images/sampling_design_suction_method-02.png){#fig-suctiondesign}
-
-[![Suction sampling for arthropods. Foto credit: Valentin Moser.](images/succion_2.JPG){#fig-suction}](https://onlinelibrary.wiley.com/doi/10.1111/eea.12952)
-
-### Load raw data
-
-```{r load_suction_data_2021}
-
-t21 = readxl::read_xlsx(path = here("data", "raw","data_arthropods_terrestrial_2021.xlsx"), sheet = 1) |>        mutate(year = 2021) |> # this was the sampling made in 2021 
-  rename(laufnummer = Laufnummer, length = size) |> # rename columns
-  select(-c(remarks, adult)) # remove columns
-
-```
-
-```{r load_suction_data_2022}
-
-```
-
-### Add predictors
-
-First we add the area of the beaver pond, and the stream ecomorphology.
-
-```{r add_predictors_suctions}
-# load site info 
-
-site_info <- read_csv(here("data", "raw" , "site_info.csv")) |> select (c(2:5,8,9,19,23)) 
-# meerge site info to t21 df 
-t2 <- t21 %>%
-  left_join(site_info, by = "laufnummer") |> 
-  select(year, site,laufnummer, sample,location, samples_replicate, ecomorphology, area_pool, "class","order","suborder","family","length" )
-
-# To see rows with NA in size
-t3 <-  t2 %>% filter(!is.na(length)) |> select(-c(year, "class","suborder"))
-```
-
-Then we add the `human_influence` variable:
-
-We are going to sub-sample the first and second sampled positions. That ones that are influenced by beaver damming.
-
-```{r subsample}
-
-t3 <- t2 |> filter(str_detect(sample, "_(1|2)$")) |> mutate(location = if_else(location == "Control", "Control", "beaver_influenced"))
-
-```
-
-```{r summery_stats}
-# calculate summary stats
-stats <- t3 %>%
-  group_by(location) %>%
-  summarise(
-    n = n(),
-    mean = mean(length, na.rm = TRUE),
-    sd = sd(length, na.rm = TRUE),
-    median = median(length, na.rm = TRUE),
-    .groups = "drop"
-  ) %>%
-  mutate(
-    label = paste0("n=", n, 
-                   "\nmean=", round(mean, 2),
-                   "\nsd=", round(sd, 2),
-                   "\nmedian=", round(median, 2))
-  )
-```
-
-### Visualize
-
-```{r histo}
-
-ggplot(t3, aes(x = length, fill = location)) +
-  geom_histogram(
-    binwidth = 1,
-    position = "identity",
-    alpha = 0.4,
-    color = "black"
-  ) +
-  labs(
-    title = "Size Distributions by Location for suction sampling",
-    subtitle = "Note that outflow, inflow and pool locations are defined as beaver_influenced",
-    y = "Count",
-    x = "Size (mm)"
-  )+
-  scale_x_continuous(limits = c(0,20), breaks = seq(0,20,1))
-
-```
-
-```{r geom_density}
-
-ggplot(t3, aes(x = length, fill = location)) +
-  geom_density(alpha = 0.4, adjust = 1 ) +
-  labs(
-    title = "Size Distributions by Location",
-    subtitle = "Note that outflow, inflow and pool locations are defined as beaver_influenced",
-    y = "Density",
-    x = "Size (mm)"
-  )+
-  scale_x_continuous(limits = c(0,20), breaks = seq(0,20,1))
-```
-
-## Interception trap: flying arthropods community
-
-### **Description**
-
-We are going to load the raw data collected by Ph.D. student [Valentin Moser](https://www.wsl.ch/de/mitarbeitende/moserval/) and research assistants during June 2021 in **eight** different beaver dammed streams (@fig-moserflying) within the WSL-Eawag project: [Species interactions in beaver engineered habitats link land-water ecosystem processes](https://www.wsl.ch/de/projekte/sfsf/). They have sampled in two locations within each site: the main pond created by the beaver (i.e. `pool` factor level within the column `location`) and 500 meters upstream of that pond (i.e. `control` factor level within the column `location`). Please refer to [@moser2025] for detailed sampling method.
-
-![From Moser et al. 2025. Habitat heterogeneity and food availability in beaver-engineered streams foster bat richness, activity and feeding. Journal of Animal Ecology](images/RR_discussion.001-01.png){#fig-moserflying fig-align="center"}
-
-In the folder `data/raw` you will find: `data_arthropods_flying.xlsx`
-
-Flying arthropods were collected by interception traps (surface area 0.25 $m^2$) covered with 500 $\mu m$ net during 10 days.
-
-![Example of the interception trap used to collect flying arthropods. Credits to Valentin Moser.](images/emergent_trap.png){#fig-lily fig-align="center"}
-
-### Load raw data
-
-```{r load_raw_data}
-
-d <- readxl::read_xlsx(path = here("data", "raw","data_arthropods_flying.xlsx"), sheet = 1) |> 
-select(-c(sort, remarks))|> # remove unnecesary column
- filter( !is.na(size) )|>  # remvoe NAs observations 
-rename(length = size)
-
-head(d)
-```
-
-```{r metadata}
-
-data_dict <- data.frame(
-  Column_name = c(
-    "site", "location", "date", "class", "order", "suborder", "family",
-    "subfamily", "juvenile", "terrestrial", "juv aquatic", "unusable",
-    "length", "remarks"
-  ),
-  Explanation = c(
-    "Study system in which the individual was sampled",
-    "Site at which individual was sampled (i.e. pool or control)",
-    "Collection period during which the individual was sampled (i.e. June or July)",
-    "Taxonomic class the sampled individual belongs to",
-    "Taxonomic order the sampled individual belongs to",
-    "Taxonomic suborder the sampled individual belongs to (where available)",
-    "Taxonomic family the sampled individual belongs to (where available)",
-    "Taxonomic subfamily the sampled individual belongs to (where available)",
-    "Binary value indicating if the sampled individual was a juvenile. 1 = juvenile, 0 = adult",
-    "Binary value indicating if the sampled individual was winged. 1 = non-winged, 0 = winged",
-    "Binary value indicating if the sampled individual belongs to a taxa with purely aquatic juveniles. 1 = aquatic, 0 = not aquatic",
-    "Binary value indicating if the sampled individual came from water (amphipoda, gastropoda)",
-    "Length of the sampled individual in mm (rounded to full numbers). Measured from head to end of abdomen, excluding appendages (wings, limbs, antennae, cerci, etc.)",
-    "Additional comments or information about a given individual"
-  )
-)
-
-kable(data_dict, align = c("l","l"), caption = "Metadata for data_arthropods_flying.xlsx")
-
-
-```
-
-Now we are going to remove unnecessary columns
-
-```{r removcolumns}
-
-d1 <- d |> select(-c("date","class" ,"suborder" ,"subfamily" ,"juvenile","terrestrial", "juv.aquatic" ,"unusable", )) |> rename(laufnummer = Laufnummer)
-```
-
-### Add predictors
-
-Add beaver pond area (`area_pool`) and stream ecomorphology.
-
-```{r add_predictors}
-d2 <- d1  |> 
-  left_join(site_info[c(1,5,6)], by = "laufnummer") |> 
-  mutate(method = "intercept_trap") |> 
-  mutate(site = recode(site,
-    "Chrie" = "Chriesbach",
-    "Coruz" = "Coruz",
-    "Gaebe" = "Gaebelbach",
-    "Hasli" = "Haslibach",
-    "Leuge" = "Leugene",
-    "Riedg" = "Riedgrabe",
-    "Talen" = "Talent",
-    "Weier" = "Weierbach"
-  ))
-```
-
-Add `human influence` variable:
-
-```{r add_human_influence2}
-
-d3 <- d2 |> 
-  left_join(h_unique, by = "site") |> 
-  select(-laufnummer)
-```
-
-**Question:**
-
-How many taxa are there?
-
-```{r get_unique_taxa_families}
-# Get unique families (excluding NA)
-families <- unique(na.omit(d3$family))
-
-# Number of unique families
-num_families <- length(families)
-
-# Print results
-cat("Number of unique families:", num_families, "\n\n")
-cat("Families:\n")
-print(sort(families))
-```
-
-Description of the families we have found:
-
-```{r list_families}
-# Families Found Near Streams in Switzerland
-
-families_table <- data.frame(
-  Family = c(
-    "Aphidoidea", "Cantharidae", "Carabidae", "Chrysomelidae",
-    "Coccinellidae", "Cucujidae", "Curculionidae", "Dytiscidae",
-    "Elmidae", "Erebidae", "Forficulidae", "Formicidae",
-    "Gerridae", "Gyrinidae", "Haliplidae", "Hydrophilidae",
-    "Latridiidae", "Monotomidae", "Mordellidae", "Nitidulidae",
-    "Notonectidae", "Panorpidae", "Phalacridae", "Psylloidea",
-    "Scirtidae", "Staphylinidae", "Syrphidae", "Tabanidae",
-    "Vespidae"
-  ),
-  Description = c(
-    "Aphids; plant sap-feeders, often found on riparian vegetation.",
-    "Soldier beetles; predatory or nectar-feeding, common in meadows near water.",
-    "Ground beetles; many species are predators along stream banks.",
-    "Leaf beetles; herbivores on riparian plants.",
-    "Lady beetles; mostly aphid predators on vegetation.",
-    "Flat bark beetles; live under bark, sometimes in moist riparian wood.",
-    "Weevils; herbivores feeding on riparian plants and shrubs.",
-    "Predaceous diving beetles; aquatic predators in streams and ponds.",
-    "Riffle beetles; aquatic, live attached to stones in running water.",
-    "Tiger moths and relatives; larvae feed on diverse plants near water.",
-    "Earwigs; omnivores hiding under stones and wood along streams.",
-    "Ants; common in soils and vegetation along riparian zones.",
-    "Water striders; aquatic predators skating on water surfaces.",
-    "Whirligig beetles; fast swimmers on water surfaces in streams.",
-    "Crawling water beetles; small herbivorous beetles in shallow water.",
-    "Water scavenger beetles; aquatic or semi-aquatic scavengers.",
-    "Minute brown scavenger beetles; found in decaying plant matter.",
-    "Root-eating beetles; often associated with decaying wood.",
-    "Tumbling flower beetles; found on flowers near riparian habitats.",
-    "Sap beetles; feed on decaying fruit, fungi, and plant material.",
-    "Backswimmers; aquatic predators that swim upside down.",
-    "Scorpionflies; scavengers, often in damp shaded stream habitats.",
-    "Shining flower beetles; small pollen feeders.",
-    "Psyllids; plant sap-feeders, often on riparian trees and shrubs.",
-    "Marsh beetles; aquatic or semi-aquatic beetles in wetlands.",
-    "Rove beetles; very diverse predators and scavengers in moist habitats.",
-    "Hoverflies; larvae are aphid predators, adults visit flowers.",
-    "Horse flies; adults feed on blood or nectar, larvae in wet soils.",
-    "Wasps; diverse group of predators and parasitoids near water."
-  )
-)
-
-kable(families_table, caption = "Ecological roles of arthropod families sampled close to streams in Switzerland")
-
-```
-
-### Visualize
-
-```{r pot_histogram}
-
-ggplot(d3, aes(x = length, fill = location)) +
-  geom_histogram(binwidth = 1, color = "black", alpha = 0.7, position = "dodge") +
-  labs(
-    title = "Individual Size Distribution histogram by sampled location (intercept trap)",subtitle = "Note that we have sampled Control and Pool locations in 8 sites",
-    x = "Size (mm)",
-    y = "Frequency",
-    fill = "Location"
-  ) 
-```
-
-## Merge all three methods
-
-```{r meerge}
-
-a <- merge(m4, d3, )
-```
+## 
 
 ## Conclusions
 
