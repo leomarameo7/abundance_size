@@ -187,7 +187,7 @@ stats <- m3 %>%
   )
 ```
 
-### Plot
+### Visualize
 
 ```{r plot_macro}
 # Alternative: side-by-side histogram (use 'dodge')
@@ -515,32 +515,44 @@ Note that ISD relationships are sensitive to the under sampling of small body si
 
 ### **Description**
 
-This data was collected by Ph.D student Valentin Moser and Master students in 2021 and 2022 within 16 different streams in Switzerland. In each stream they sampled in 4 locations: `control`, `inflow`, `pool`, `outflow`. They sampled terrestrial arthropods by using a 5 x 1 m plots located at three different positions: one meter from the stream's edge (1), at 2 times the pool width distance (2) and 3 times the pool width distance (3) (i.e.,orange points in @fig-suctiondesign. Within each plot, they sampled the arthropods at the two ends of the 5 x 1 m plot in cylindrical baskets (50 cm diameter, 67 cm height, woven fabric) using suction sampling on a sunny day between 10:00-17:00 during peak arthropod activity @fig-suction. The samples were stored in ethanol, individuals were counted, measured and identified to order level with the help of a binocular.
+This data was collected by Ph.D student Valentin Moser and Master students in 2021 and 2022 within 16 different streams in Switzerland. In each stream they sampled in 4 locations: `control`, `inflow`, `pool`, `outflow`. They sampled terrestrial arthropods by using a 5 x 1 m plots located at three different point replicates (`point_rep`): one meter from the stream's edge (**1**), at 2 times the pool width distance (**2**) and 3 times the pool width distance (**3**) (i.e.,orange points in @fig-suctiondesign. Within each plot, they sampled the arthropods at the two ends of the 5 x 1 m plot in cylindrical baskets (50 cm diameter, 67 cm height, woven fabric) using suction sampling on a sunny day between 10:00-17:00 during peak arthropod activity @fig-suction. The samples were stored in ethanol, individuals were counted, measured and identified to order level with the help of a binocular.
 
-![Sampling design for terrestrial arthropods sampling. This figure was adapted from Valentin Moser et al. 2025 J. Animal Ecology](images/sampling_design_suction_method.png){#fig-suctiondesign}
-
-S
+![Sampling design for terrestrial arthropods sampling. The numbers represent point replicates for each location sampled. This figure was adapted from Valentin Moser et al. 2025 J. Animal Ecology](images/sampling_design_suction_method-02.png){#fig-suctiondesign}
 
 [![Suction sampling for arthropods. Foto credit: Valentin Moser.](images/succion_2.JPG){#fig-suction}](https://onlinelibrary.wiley.com/doi/10.1111/eea.12952)
 
 ### Load raw data
 
-```{r load_terrestrial_art_data}
+```{r load_suction_data_2021}
 
-t21 = readxl::read_xlsx(path = here("data", "raw","data_arthropods_terrestrial_2021.xlsx"), sheet = 1) |> mutate(year = 2021) |> rename(laufnummer = Laufnummer, length = size) |> select(-c(remarks,adult))
+t21 = readxl::read_xlsx(path = here("data", "raw","data_arthropods_terrestrial_2021.xlsx"), sheet = 1) |>        mutate(year = 2021) |> # this was the sampling made in 2021 
+  rename(laufnummer = Laufnummer, length = size) |> # rename columns
+  select(-c(remarks, adult)) # remove columns
+
+```
+
+```{r load_suction_data_2022}
+
+```
+
+### Add predictors
+
+First we add the area of the beaver pond, and the stream ecomorphology.
+
+```{r add_predictors_suctions}
 # load site info 
 
 site_info <- read_csv(here("data", "raw" , "site_info.csv")) |> select (c(2:5,8,9,19,23)) 
-# check common columns 
-intersect(names(t21), names(site_info))
 # meerge site info to t21 df 
-t21_merged <- t21 %>%
+t2 <- t21 %>%
   left_join(site_info, by = "laufnummer") |> 
-  select(year, site, sample,location, samples_replicate, ecomorphology, area_pool, "class","order","suborder","family","length" )
+  select(year, site,laufnummer, sample,location, samples_replicate, ecomorphology, area_pool, "class","order","suborder","family","length" )
 
 # To see rows with NA in size
-t2 <-  t21_merged %>% filter(!is.na(length))
+t3 <-  t2 %>% filter(!is.na(length)) |> select(-c(year, "class","suborder"))
 ```
+
+Then we add the `human_influence` variable:
 
 We are going to sub-sample the first and second sampled positions. That ones that are influenced by beaver damming.
 
@@ -766,7 +778,7 @@ kable(families_table, caption = "Ecological roles of arthropod families sampled 
 
 ```
 
-### Plot data
+### Visualize
 
 ```{r pot_histogram}
 
