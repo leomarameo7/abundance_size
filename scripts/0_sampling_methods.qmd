@@ -42,7 +42,7 @@ theme_set(newtheme)
 
 ## Introduction
 
-I am doing this notebook to help me and collaborators to understand which data we have and what is the clean / wrangle actions we should do before fitting the individual size distribution (ISD) model proposed by [@wesner2024] to answer these questions:
+First of all: What are the open research questions we want to answer?
 
 ::: {.callout-important appearance="simple"}
 **Open questions:**
@@ -54,9 +54,11 @@ I am doing this notebook to help me and collaborators to understand which data w
 -   ... your question (maybe something about terrestrial vs aquatic ISD) ?
 :::
 
-In order to answer these questions, we have sampled the arthropod community in Swiss streams dammed by beavers. We have used three (3) different methods, catching different insect taxons. The three methods from now on we defined as: `intercept_trap`, `kick_net`, `suction`.
+In order to answer these questions, we have sampled the arthropod community across Swiss streams dammed by beavers. We have used three (3) different methods, catching different insect taxons. The three methods from now on we defined as: `intercept_trap`, `kick_net`, `suction`.
 
 ## Kick net: aquatic invertebrates community
+
+### **Description**
 
 The aquatic invertebrates community was collected by Ph.D student [Valentin Moser](https://www.wsl.ch/de/mitarbeitende/moserval/) , UZH Master student [Dominic Tinner](https://dominictinner.pro) and Patrick Hofmann within the WSL-Eawag project: [Species interactions in beaver engineered habitats link land-water ecosystem processes](https://www.wsl.ch/de/projekte/sfsf/). They sampled 14 streams with beaver presence across Switzerland (@fig-tinner). The streams varied in surrounding land use intensity (urban, agricultural, or forest, see @sec-typo ) and stream ecomorphology, (i.e., the structural stream characteristics @sec-streamecomorpho ).
 
@@ -70,13 +72,13 @@ The aquatic invertebrate sampling was conducted in May/June of 2021 or 2022 with
 
 [![Dominic Tinner collecting aquatic invertebrates using the kick net method. Credits: Domin Tinner Productions.](images/kicknet_tinner.jpeg){#fig-kicknet}](https://umwelt.tg.ch/public/upload/assets/173800/3_Lebendiger%20Dorfbach_Dominic%20Tinner.pdf?fp=1)
 
-### Predictors:
+### Predictors description:
 
-#### Land use intensity {#sec-typo}
+**Human influence**
 
-These variable express the soil area (square meters $m^2$ ) with specific use. Land-use intensity data for each site were extracted by Valentin Moser from Geodienste.ch and swisstopo.admin.ch using ARCGIS (Pro v. 2.8, Esri Inc., 2021 und QGIS 3.40 'Bratislava' 2024). A radius of 250 meters was selected around the center of each `Pool` and `Control` location. A visual inspection of the data showed highly reliable classification for agricultural (e.g., crop fields, pastures, areas that farmers maintain for biodiversity) and natural (e.g., forests, riparian areas) land-use. Areas without classified land-use were very often urban areas and human infrastructure, such as streets, railways, and housing. Therefore, missing data was assigned to urban land-use. [V. Moser](valentin.moser@wsl.ch) averaged the sum of agricultural, urban, and natural land-use cover types per site across `Pool` and `Control`. Finally, we aggregate agricultural and urban land cover estimates into an overall human impact variable called `human_influence`**.**
+These variable represents soil cover extension (square meters $m^2$ ) that is defined as agriculture or urban. by Valentin Moser downloaded soil area extension for each site from Geodienste.ch and swisstopo.admin.ch using ARCGIS (Pro v. 2.8, Esri Inc., 2021 und QGIS 3.40 'Bratislava' 2024). He selected a radius of 250 meters around the center of each `Pool` and `Control` location. A visual inspection of the data showed highly reliable classification for agricultural (e.g., crop fields, pastures, areas that farmers maintain for biodiversity) and natural (e.g., forests, riparian areas) land-use. Areas without classified land-use were very often urban areas and human infrastructure, such as streets, railways, and housing. Therefore, missing data was assigned to urban land-use. [V. Moser](valentin.moser@wsl.ch) averaged the sum of agricultural, urban, and natural land-use cover types per site across `Pool` and `Control`. Finally, he aggregated agricultural and urban land cover estimates into an overall human impact variable called `human_influence`**.**
 
-#### Stream ecomorphology {#sec-streamecomorpho}
+**Stream ecomorphology**
 
 The classification of ecomorphology index considered factors such as riparian zone modifications and structural alterations of stream beds to provide an estimate of the degree of anthropogenic impact. The streams included in this study belonged to the first three of the five ecomorphology categories, ranging from near-natural (category level 1) to slightly impacted (2) and heavily impacted (3). The values for ecomorphology were retrieved for each stream from the Swiss Geoportal, specifically the map layer ‘Ecomorphology Level F – River reaches‘ ([link to access](https://www.geo.admin.ch/de/datensatz-27052021-wie-naturnah-sind-unsere-baeche-und-fluesse-oekomorphologie-stufe-f-bafu)).
 
@@ -88,7 +90,11 @@ m = read_csv(here("data", "raw", "mzb_size_measurements.csv")) |> select(-c(auth
 
 ```
 
-Let's load the covariates/predictors we are interested in:
+### Add predictors
+
+**Pond area and ecomorphology**
+
+Let's load the covariates/predictors we are interested in: pond area and ecomorphology.
 
 ```{r site_info}
 # load site info 
@@ -109,7 +115,9 @@ m1 <- m  |>
   
 ```
 
-```{r add_human_influence}
+**Human influence**
+
+```{r add_human_influence1}
 
 h = read_csv(here("data","raw","landuse_valentin.csv")) |> select(2,7)
 # just get the unique value by site 
@@ -449,7 +457,7 @@ print(missing_families)
 
 Steps 5 - 6:
 
--   I will process the @pomeranz2022 dataset similarly, averaging $a$ and $b$ for families with multiple entries.
+-   I will process the @pomeranz2022 data set similarly, averaging $a$ and $b$ for families with multiple entries.
 -   I will join the Pomeranz's coefficients to the missing families from the previous step and calculate their dry weights using the same formula $W = a * L^b$.
 
 ```{r pomeranz_2022}
@@ -504,6 +512,8 @@ Note that ISD relationships are sensitive to the under sampling of small body si
 :::
 
 ## Suction: terrestrial invertebrates community
+
+### **Description**
 
 This data was collected by Ph.D student Valentin Moser and Master students in 2021 and 2022 within 16 different streams in Switzerland. In each stream they sampled in 4 locations: `control`, `inflow`, `pool`, `outflow`. They sampled terrestrial arthropods by using a 5 x 1 m plots located at three different positions: one meter from the stream's edge (1), at 2 times the pool width distance (2) and 3 times the pool width distance (3) (i.e.,orange points in @fig-suctiondesign. Within each plot, they sampled the arthropods at the two ends of the 5 x 1 m plot in cylindrical baskets (50 cm diameter, 67 cm height, woven fabric) using suction sampling on a sunny day between 10:00-17:00 during peak arthropod activity @fig-suction. The samples were stored in ethanol, individuals were counted, measured and identified to order level with the help of a binocular.
 
@@ -561,35 +571,6 @@ stats <- t3 %>%
 
 ### Visualize
 
-```{r terr_visualize}
-
-ggplot(t3, aes(y = location, x = length, fill = location)) +
-  stat_halfeye(
-    position = "dodge",
-    adjust = 10,
-    width = 1.5,
-    justification = -0.1,
-    point_interval = mean_qi,
-    alpha = 0.7
-  ) +
-  geom_text(
-    data = stats,
-    aes(x = max(t3$length) * .25,   # place text to the right of distributions
-        y = location,
-        label = label),
-    inherit.aes = FALSE,
-    hjust = 0
-  ) +
-  labs(
-    title = "Size Distributions by Location (suction method)",
-    subtitle = "Note that outflow , inflow and pool locations are defined as beaver_influenced",
-    y = "",
-    x = "Size (mm)"
-  )+
-  scale_x_continuous(limits = c(0,20), breaks = seq(0,20,1))
-
-```
-
 ```{r histo}
 
 ggplot(t3, aes(x = length, fill = location)) +
@@ -624,6 +605,8 @@ ggplot(t3, aes(x = length, fill = location)) +
 
 ## Interception trap: flying arthropods community
 
+### **Description**
+
 We are going to load the raw data collected by Ph.D. student [Valentin Moser](https://www.wsl.ch/de/mitarbeitende/moserval/) and research assistants during June 2021 in **eight** different beaver dammed streams (@fig-moserflying) within the WSL-Eawag project: [Species interactions in beaver engineered habitats link land-water ecosystem processes](https://www.wsl.ch/de/projekte/sfsf/). They have sampled in two locations within each site: the main pond created by the beaver (i.e. `pool` factor level within the column `location`) and 500 meters upstream of that pond (i.e. `control` factor level within the column `location`). Please refer to [@moser2025] for detailed sampling method.
 
 ![From Moser et al. 2025. Habitat heterogeneity and food availability in beaver-engineered streams foster bat richness, activity and feeding. Journal of Animal Ecology](images/RR_discussion.001-01.png){#fig-moserflying fig-align="center"}
@@ -632,7 +615,7 @@ In the folder `data/raw` you will find: `data_arthropods_flying.xlsx`
 
 Flying arthropods were collected by interception traps (surface area 0.25 $m^2$) covered with 500 $\mu m$ net during 10 days.
 
-![Example of the interception trap used to collect flying arthropods. Credits to Valentin Moser. ](images/emergent_trap.png){#fig-lily fig-align="center"}
+![Example of the interception trap used to collect flying arthropods. Credits to Valentin Moser.](images/emergent_trap.png){#fig-lily fig-align="center"}
 
 ### Load raw data
 
@@ -646,10 +629,7 @@ rename(length = size)
 head(d)
 ```
 
-### Metadata:
-
 ```{r metadata}
-
 
 data_dict <- data.frame(
   Column_name = c(
@@ -677,15 +657,52 @@ data_dict <- data.frame(
 
 kable(data_dict, align = c("l","l"), caption = "Metadata for data_arthropods_flying.xlsx")
 
+
 ```
 
-Question:
+Now we are going to remove unnecessary columns
 
-How many taxa which ones are there?
+```{r removcolumns}
+
+d1 <- d |> select(-c("date","class" ,"suborder" ,"subfamily" ,"juvenile","terrestrial", "juv.aquatic" ,"unusable", )) |> rename(laufnummer = Laufnummer)
+```
+
+### Add predictors
+
+Add beaver pond area (`area_pool`) and stream ecomorphology.
+
+```{r add_predictors}
+d2 <- d1  |> 
+  left_join(site_info[c(1,5,6)], by = "laufnummer") |> 
+  mutate(method = "intercept_trap") |> 
+  mutate(site = recode(site,
+    "Chrie" = "Chriesbach",
+    "Coruz" = "Coruz",
+    "Gaebe" = "Gaebelbach",
+    "Hasli" = "Haslibach",
+    "Leuge" = "Leugene",
+    "Riedg" = "Riedgrabe",
+    "Talen" = "Talent",
+    "Weier" = "Weierbach"
+  ))
+```
+
+Add `human influence` variable:
+
+```{r add_human_influence2}
+
+d3 <- d2 |> 
+  left_join(h_unique, by = "site") |> 
+  select(-laufnummer)
+```
+
+**Question:**
+
+How many taxa are there?
 
 ```{r get_unique_taxa_families}
 # Get unique families (excluding NA)
-families <- unique(na.omit(d$family))
+families <- unique(na.omit(d3$family))
 
 # Number of unique families
 num_families <- length(families)
@@ -753,47 +770,33 @@ kable(families_table, caption = "Ecological roles of arthropod families sampled 
 
 ```{r pot_histogram}
 
-# Alternative: side-by-side histogram (use 'dodge')
-ggplot(d, aes(x = length, fill = location)) +
+ggplot(d3, aes(x = length, fill = location)) +
   geom_histogram(binwidth = 1, color = "black", alpha = 0.7, position = "dodge") +
   labs(
-    title = "Histogram of individual sizes by sampled location (intercept trap)",
+    title = "Individual Size Distribution histogram by sampled location (intercept trap)",subtitle = "Note that we have sampled Control and Pool locations in 8 sites",
     x = "Size (mm)",
     y = "Frequency",
     fill = "Location"
-  ) +
-  theme_bw(base_size = 14)
-
-# with stat halfeye
-ggplot(d, aes(y = location, x = length, fill = location)) +
-  stat_halfeye(position = "dodge",
-    adjust = 1,       # smoothness of density
-    width = 0.6,        # width of half-eye
-    justification = -0.1,
-    point_interval = mean_qi,  # show mean & 95% interval
-    alpha = 0.7
-  ) +
-  labs(
-    title = "Size Distributions by Location (intercept trap)",
-    y = "Location",
-    x = "Size (mm)"
-  ) +
-  theme_bw(base_size = 14)
-
+  ) 
 ```
 
-## 
+## Merge all three methods
+
+```{r meerge}
+
+a <- merge(m4, d3, )
+```
 
 ## Conclusions
 
 ::: callout-important
 -   Interception trap method (aquatic-terrestrial invertebrates): we can standardize by the area sampled.
 
-    For Control, we have `r nrow(d[d$location == "Control", ])` observations, with a minimum length value = `r min(d$length[d$location == "Control"], na.rm = TRUE)` and a maximum length value = `r max(d$length[d$location == "Control"], na.rm = TRUE)`.
+    For Control, we have `r nrow(d3[d3$location == "Control", ])` observations, with a minimum length value = `r min(d3$length[d3$location == "Control"], na.rm = TRUE)` and a maximum length value = `r max(d3$length[d3$location == "Control"], na.rm = TRUE)`.
 
-    For beaver pond location, we have `r nrow(d[d$location == "Pool", ])` observations, with a minimum length value = `r min(d$length[d$location == "Pool"], na.rm = TRUE)` and a maximum length value = `r max(d$length[d$location == "Pool"], na.rm = TRUE)`.
+    For beaver pond location, we have `r nrow(d3[d3$location == "Pool", ])` observations, with a minimum length value = `r min(d3$length[d3$location == "Pool"], na.rm = TRUE)` and a maximum length value = `r max(d3$length[d3$location == "Pool"], na.rm = TRUE)`.
 
--   Kick net method (aquatic macroinvertebrates): we can not standardize by the area sampled.
+-   Kick net method (benthic macroinvertebrates): we can not standardize by the area sampled.
 
     For Control, we have `r nrow(m4[m4$location == "Control", ])` observations, with a minimum length value = `r min(m4$length[m4$location == "Control"], na.rm = TRUE)` and a maximum length value = `r max(m4$length[m4$location == "Control"], na.rm = TRUE)`.
 
