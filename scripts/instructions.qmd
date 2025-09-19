@@ -131,7 +131,7 @@ Following the Bayesian theorem allows you to:
 
 What else do you want ?
 
-### ISD analysis under bayesian approach  
+### ISD analysis under bayesian approach
 
 Now, for what to concern the estimation of the arthropod ISD, we can follow [@wesner2024]. Specifically, Jefff Wesner and collaborators created the `isdbayes` package to fit Bayesian (non)-linear hierarchical models with a truncated Pareto likelihood using `brms` package ([Bürkner 2017](https://cran.r-project.org/web/packages/brms/index.html)). The motivation for the package was to estimate power law exponents of ecological ISD using individual-level body size data in a generalized mixed model framework. The likelihood for the truncated Pareto used here was described in [@edwards2020]. This package translates that maximum likelihood estimation into the `brms` package.
 

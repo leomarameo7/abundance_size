@@ -200,7 +200,7 @@ m3  |> filter(family != taxon_lowest)
 m4 <- m3|> select(-taxon_lowest, -laufnummer) 
 ```
 
-### Save the processed data: 
+### Save the processed data:
 
 ```{r save_kicknet_processed}
 
@@ -477,7 +477,7 @@ Now we are going to remove unnecessary columns for our analysis
 t6 <- t5 |> select(-c(laufnummer, replicates)) |> mutate(method = "suction")
 ```
 
-### Save the processed data: 
+### Save the processed data:
 
 ```{r save_suction}
 
@@ -692,7 +692,7 @@ write.csv(a,here("data","processed","data_processed.csv"))
 
 ## From length to body mass
 
-We are going to estimate arthropod's body mass using taxon-­specific published length-­ weight coefficients. Remember that we are going to use the allometric relationship $W = a*L^b$, where $L$ is the arthropod's length in millimeters, $W$ is the dry weight in milligrams. $a$ and $b$ are constants.
+We are going to estimate arthropod's body mass using taxon-­specific published length-­ weight coefficients. Remember that we are going to use the allometric relationship $W = a*L^b$, where $L$ is the arthropod's length in millimeters, $W$ is the dry weight in milligrams. $a$ and $b$ are constant coefficients.
 
 ### Load allometric coefficients
 
@@ -706,77 +706,167 @@ vl <- read_excel(here("data","raw","lw","van Leeuwen_2025.xlsx")) # van Leeuwen 
 a <- read.csv(here("data","processed","data_processed.csv"))
 ```
 
-Just check families that are in our data frame, but not in Van Leeuwen or Pomeranz.
-
 ```{r}
-# A data frame of coefficients for your families
-# A value of NA means a specific coefficient was not found in common literature
-# and you will need to find a group-level estimate or a different source.
+# --- 1. Fix datasets ---
+pom <- pom %>%
+  mutate(family = ifelse(family == "Helicopsychidae (case width)", "Helicopsychidae", family))
 
-coefficients <- tibble::tribble(
-  ~family, ~a, ~b,
-  "Rhyacophilidae", 0.0094, 2.946,
-  "Hydropsychidae", 0.0069, 3.016,
-  "Sericostomatidae", 0.0084, 2.990,
-  "Goeridae", 0.0076, 2.969,
-  "Ephemerellidae", 0.0044, 3.003,
-  "Baetidae", 0.0053, 2.872,
-  "Simuliidae", 0.0049, 2.942,
-  "Chironomidae", 0.0051, 2.978,
-  "Gammaridae", 0.0047, 2.980,
-  "Psychodidae", 0.0047, 2.942,
-  "Hydracarina", 0.0075, 2.900,
-  "Hydrobiidae", 0.160, 2.500, # A general value for freshwater gastropods
-  "Elmidae", 0.0086, 2.977,
-  "Curculionidae", NA, NA, # Terrestrial family, highly variable
-  "Ephemeridae", 0.0078, 2.970,
-  "Caenidae", 0.0044, 3.003, # Same as Ephemerellidae (Ephemeroptera)
-  "Limoniidae", 0.0068, 2.924,
-  "Ceratopogonidae", 0.0051, 2.978, # Same as Chironomidae (Diptera)
-  "Athericidae", NA, NA,
-  "Hydroptilidae", 0.0069, 3.016, # Same as Hydropsychidae (Trichoptera)
-  "Leuctridae", 0.0044, 2.915,
-  "Corixidae", 0.0098, 2.980,
-  "Asellidae", 0.0047, 2.980, # Same as Gammaridae (Amphipoda)
-  "Calopterygidae", 0.0099, 2.990,
-  "Sphaeriidae", 0.100, 2.800, # General value for bivalves
-  "Physidae", 0.160, 2.500, # Same as Hydrobiidae (Gastropoda)
-  "Lymnaeidae", 0.160, 2.500, # Same as Hydrobiidae (Gastropoda)
-  "Dixidae", 0.0047, 2.942, # Same as Psychodidae (Diptera)
-  "Dytiscidae", 0.0090, 2.990,
-  "Haliplidae", 0.0090, 2.990, # Same as Dytiscidae (Coleoptera)
-  "Tipulidae", 0.0068, 2.924, # Same as Limoniidae (Diptera)
-  "Leptophlebiidae", 0.0044, 3.003, # Same as Ephemerellidae (Ephemeroptera)
-  "Planorbidae", 0.160, 2.500, # Same as Hydrobiidae (Gastropoda)
-  "Aeshnidae", 0.0099, 2.990, # Same as Calopterygidae (Odonata)
-  "Culicidae", 0.0047, 2.942, # Same as Psychodidae (Diptera)
-  "Coenagrionidae", 0.0099, 2.990, # Same as Calopterygidae (Odonata)
-  "Bithyniidae", 0.160, 2.500, # Same as Hydrobiidae (Gastropoda)
-  "Heptageniidae", 0.0044, 3.003, # Same as Ephemerellidae (Ephemeroptera)
-  "Polycentropodidae", 0.0069, 3.016, # Same as Hydropsychidae (Trichoptera)
-  "Limnephilidae", 0.0076, 2.969, # Same as Goeridae (Trichoptera)
-  "Odontoceridae", 0.0084, 2.990, # Same as Sericostomatidae (Trichoptera)
-  "Dugesiidae", 0.0060, 2.500, # A general value for turbellarians
-  "Scirtidae", 0.0090, 2.990, # Same as Dytiscidae (Coleoptera)
-  "Nemouridae", 0.0044, 2.915, # Same as Leuctridae (Plecoptera)
-  "Lepidostomatidae", 0.0084, 2.990, # Same as Sericostomatidae (Trichoptera)
-  "Libellulidae", 0.0099, 2.990, # Same as Calopterygidae (Odonata)
-  "Gerridae", 0.0098, 2.980, # Same as Corixidae (Hemiptera)
-  "Glossiphoniidae", 0.0060, 2.500, # Same as Dugesiidae (Hirudinea)
-  "Gomphidae", 0.0099, 2.990, # Same as Calopterygidae (Odonata)
-  "Veliidae", 0.0098, 2.980, # Same as Corixidae (Hemiptera)
-  "Erpobdellidae", 0.0060, 2.500, # Same as Dugesiidae (Hirudinea)
-  "Sialidae", 0.0090, 2.990, # Same as Dytiscidae (Megaloptera)
-  "Astacidae", 0.0065, 3.01, # For decapods
-  "Syrphidae", NA, NA, # Aquatic larva, terrestrial adult
-  "Platycnemididae", 0.0099, 2.990 # Same as Calopterygidae (Odonata)
-  # NOTE: Many remaining families are primarily terrestrial.
-  # Their coefficients are highly variable, often habitat-dependent,
-  # and not well-documented in large-scale aquatic ecology reviews.
-)
+vl <- vl %>%
+  filter(family != "Chironomidae (non-Tanypodinae)")
+
+# --- 2. Average coefficients per family ---
+vl_avg <- vl %>%
+  group_by(family) %>%
+  summarise(
+    a = mean(a, na.rm = TRUE),
+    b = mean(b, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+pom_avg <- pom %>%
+  group_by(family) %>%
+  summarise(
+    a = mean(a, na.rm = TRUE),
+    b = mean(b, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# --- 3. First join with vl_avg (priority source) ---
+a <- a %>%
+  left_join(vl_avg, by = "family") %>%
+  mutate(dry_weight = a * (length ^ b))
+
+# --- 4. Find families still missing after vl ---
+missing_fams <- a %>%
+  filter(is.na(dry_weight)) %>%
+  distinct(family)
+
+# --- 5. Complement with pom_avg for missing families ---
+a <- a %>%
+  left_join(
+    pom_avg %>% filter(family %in% missing_fams$family),
+    by = "family",
+    suffix = c("", "_pom")
+  ) %>%
+  mutate(
+    a = ifelse(is.na(a), a_pom, a),
+    b = ifelse(is.na(b), b_pom, b),
+    dry_weight = ifelse(is.na(dry_weight), a * (length ^ b), dry_weight)
+  ) %>%
+  select(-a_pom, -b_pom)
+
+# --- 6. Check if anything is still missing ---
+still_missing <- a %>%
+  filter(is.na(dry_weight)) %>%
+  distinct(family)
+
+cat("Number of families still missing after vl + pom:", nrow(still_missing), "\n")
+print(still_missing)
+
 ```
 
-### Length - Weight estimates
+```{r}
+# --- Step 1: Prepare order-level averages from vl + pom ---
+vl_order <- vl %>%
+  group_by(order) %>%
+  summarise(
+    a = mean(a, na.rm = TRUE),
+    b = mean(b, na.rm = TRUE),
+    source = "van Leeuwen (order-level)",
+    .groups = "drop"
+  )
+
+pom_order <- pom %>%
+  group_by(order) %>%
+  summarise(
+    a = mean(a, na.rm = TRUE),
+    b = mean(b, na.rm = TRUE),
+    source = "Pomeranz (order-level)",
+    .groups = "drop"
+  )
+
+# --- Step 2: Prioritise vl_order, then fill remaining from pom_order ---
+a <- a %>%
+  left_join(vl_order, by = "order", suffix = c("", "_order_vl")) %>%
+  mutate(
+    a = ifelse(is.na(a), a_order_vl, a),
+    b = ifelse(is.na(b), b_order_vl, b),
+    dry_weight = ifelse(is.na(dry_weight), a * (length ^ b), dry_weight)
+  ) %>%
+  select(-a_order_vl, -b_order_vl)
+
+# Step 3: Complement with pom_order if still missing
+a <- a %>%
+  left_join(pom_order, by = "order", suffix = c("", "_order_pom")) %>%
+  mutate(
+    a = ifelse(is.na(a), a_order_pom, a),
+    b = ifelse(is.na(b), b_order_pom, b),
+    dry_weight = ifelse(is.na(dry_weight), a * (length ^ b), dry_weight)
+  ) %>%
+  select(-a_order_pom, -b_order_pom)
+
+# --- Step 4: Report what’s still missing ---
+still_missing <- a %>%
+  filter(is.na(dry_weight)) %>%
+  distinct(order, family)
+
+cat("Number of families still missing after order-level fill:", nrow(still_missing), "\n")
+print(still_missing)
+
+```
+
+```{r}
+nas <- a |> filter(is.na(dry_weight))
+```
+
+```{r}
+# Load the necessary library
+library(dplyr)
+
+# Assuming your dataframe is named 'a' and has columns 'order', 'family', and a column for length (e.g., 'length_mm')
+# Make sure to replace 'your_length_column' with the actual name of your length column.
+
+# Step 1: Assign a and b coefficients based on order/family
+a <- a %>%
+  mutate(
+    a_coeff = case_when(
+      order %in% c("Arachnida", "Araneae", "Ixodida", "Acari", "Opiliones") ~ 0.035,
+      order == "Gastropoda" ~ 0.28,
+      order == "Heteroptera" ~ 0.054,
+      order %in% c("Hymenoptera", "Mecoptera", "Neuroptera") ~ 0.007,
+      order == "Dermaptera" ~ 0.007,
+      order == "Zygentoma" ~ 0.002,
+      order == "Orthoptera" ~ 0.005,
+      TRUE ~ 0.005 # Default coefficient for all other orders
+    ),
+    b_coeff = case_when(
+      order %in% c("Arachnida", "Araneae", "Ixodida", "Acari", "Opiliones") ~ 2.6,
+      order == "Gastropoda" ~ 2.8,
+      order == "Heteroptera" ~ 2.62,
+      order %in% c("Hymenoptera", "Mecoptera", "Neuroptera") ~ 2.62,
+      order == "Dermaptera" ~ 2.92,
+      order == "Zygentoma" ~ 3.42,
+      order == "Orthoptera" ~ 2.89,
+      TRUE ~ 2.89 # Default coefficient for all other orders
+    )
+  )
+
+# Step 2: Estimate the dry_weight for rows where it is missing
+# This step uses your defined a and b coefficients to calculate dry weight
+# Replace 'your_length_column' with the actual name of your column containing body length.
+a <- a %>%
+  mutate(
+    dry_weight = ifelse(is.na(dry_weight), a_coeff * (length^b_coeff), dry_weight)
+  )
+
+# --- Step 3: Check for remaining missing values ---
+still_missing_after_fill <- a %>%
+  filter(is.na(dry_weight)) %>%
+  distinct(order, family)
+
+cat("\nNumber of families still missing after allometric fill:", nrow(still_missing_after_fill), "\n")
+print(still_missing_after_fill)
+```
 
 I am going to follow these steps:
 
@@ -789,79 +879,55 @@ I am going to follow these steps:
 7.  For the remaining 20 families for which no family-level coefficients exist, I will use the van Leeuwen data set to calculate **order-level averages** of $a$ and $b$.
 8.  Finally, I will identify any families that still do not have coefficients in either data set after these steps.
 
-Steps 1 to 4 :
-
-```{r lw_estimates}
-# 1. Prepare van Leeuwen coefficients by family (your original code)
-vl_avg_family <- vl %>%
-  group_by(family) %>%
-  summarise(
-    a_family = mean(a, na.rm = TRUE),
-    b_family = mean(b, na.rm = TRUE),
-    source_publication = paste(unique(`source publication`), collapse = "; "),
-    .groups = "drop"
-  )
-
-# 2. Join with observed arthropod families and calculate dry weight
-# We'll keep the join results in a separate tibble for clarity
-a1 <- a %>%
-  left_join(vl_avg_family, by = "family") %>%
-  mutate(dry_weight = a_family * (length ^ b_family))
-
-# 3. Find the rows in 'a1' that still have missing dry_weight values
-# These are the families that were not in the 'vl' data frame
-missing_a1 <- a1 %>%
-  filter(is.na(dry_weight))
-
-# 4. For these missing families, average the 'a' and 'b' coefficients
-# by 'order' using the original 'vl' data frame
-vl_avg_order <- vl %>%
-  group_by(order) %>%
-  summarise(
-    a_order = mean(a, na.rm = TRUE),
-    b_order = mean(b, na.rm = TRUE),
-    .groups = "drop"
-  )
-
-# 5. Join the 'missing_a1' data with the new 'order'-based coefficients
-missing_filled <- missing_a1 %>%
-  left_join(vl_avg_order, by = "order") %>%
-  # Now, calculate the dry weight for these rows using the order-based coefficients
-  mutate(
-    # This is a safe way to handle the join results. If a match was found for 'order',
-    # use a_order and b_order. Otherwise, keep a_family and b_family as NA.
-    dry_weight = if_else(
-      !is.na(a_order) & !is.na(b_order),
-      a_order * (length ^ b_order),
-      dry_weight
-    )
-  )
-
-# 6. Finally, combine the two datasets back together
-# We need to remove the missing rows from a1 and bind them with the newly filled ones
-a_final <- a1 %>%
-  filter(!is.na(dry_weight)) %>%
-  bind_rows(missing_filled)
-```
-
-Steps 5 - 6:
-
--   I will process the @pomeranz2022 data set similarly, averaging $a$ and $b$ for families with multiple entries.
--   I will join the Pomeranz's coefficients to the missing families from the previous step and calculate their dry weights using the same formula $W = a * L^b$.
-
-Step 6-8
-
--   For the remaining ... families for which no family-level coefficients exist, I will use the van Leeuwen data set to calculate **order-level averages** of $a$ and $b$.
--   Finally, I will identify any families that still do not have coefficients in either data set after these steps.
-
-```{r}
-
-```
-
 ### Check for NAs and 0s
 
+```{r check_nas_0}
+nas <- a |> filter(is.na(dry_weight) )
+
+z = a |> filter(dry_weight == 0  )
+```
+
+Remove unnecessary columns
+
 ```{r}
-a3 <- a1 |> filter(!is.na(dry_weight) & dry_weight > 0)
+
+a1 = a |> select(c("site","location","order","family","length","dry_weight" ,"ecomorphology"  ,  "area_pool" ,"human_influence" , "method", "type"))
+```
+
+### Save the processed file
+
+```{r save_data_lw}
+
+write.csv(a1 , here("data","processed","data.csv"))
+
+```
+
+### Visualize 
+
+```{r}
+a1 = read.csv(here("data","processed","data.csv"))
+```
+
+```{r hist_kick}
+
+a1 %>%
+  group_by(method) %>%
+  summarise(
+    zeros = sum(dry_weight == 0, na.rm = TRUE),
+    negatives = sum(dry_weight < 0, na.rm = TRUE)
+  )
+```
+
+```{r weight_kick}
+ggplot( aes(x = dry_weight, fill = location)) +
+  geom_histogram(binwidth = 1, color = "black", alpha = 0.3, position = "dodge") +
+  labs(
+    title = "Histogram of arthropod ISD by location (kick net method)",
+    x = "Weight (mg)",
+    y = "Abundance",
+    fill = "Location"
+  ) +
+  facet_wrap(~ location) 
 ```
 
 ::: callout-important
