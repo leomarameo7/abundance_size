@@ -28,7 +28,7 @@ csl: eco_lett.csl
 ---
 
 ```{r load_libraries}
-
+library(glue)
 library(tidyverse)
 library(here)
 library(knitr)
@@ -205,6 +205,7 @@ m4 <- m3|> select(-taxon_lowest, -laufnummer)
 ```{r save_kicknet_processed}
 
 write.csv(m4, here("data","processed", "kicknet_clean.csv" ))
+m4 = read.csv(here("data","processed", "kicknet_clean.csv" ))
 ```
 
 ### Visualize
@@ -377,7 +378,6 @@ This data was collected by Ph.D student Valentin Moser and Master students in 20
 ```{r load_suction_data_2021}
 
 t = read_csv(here("data","raw","suction_clean.csv")) |> rename(replicates = point_rep)
-
 ```
 
 ```{r makenewcolumn}
@@ -482,6 +482,7 @@ t6 <- t5 |> select(-c(laufnummer, replicates)) |> mutate(method = "suction")
 ```{r save_suction}
 
 write.csv(t6, here("data","processed","suction_clean.csv"))
+t6 = read.csv(here("data","processed","suction_clean.csv"))
 ```
 
 ## Interception trap: flying arthropods community
@@ -584,6 +585,7 @@ d3 <- d2 |>
 ```{r save_intercept_trap}
 
 write.csv(d3, here("data","processed","intercept_clean.csv"))
+d3 = read.csv(here("data","processed","intercept_clean.csv"))
 ```
 
 **Question:**
@@ -672,219 +674,289 @@ ggplot(d3, aes(x = length, fill = location)) +
 
 ## Merge all three methods
 
-```{r meerge}
+```{r merge}
 
 a <- bind_rows(m4, d3, t6) 
+```
+
+Add new column for the ecosystem:
+
+```{r clean_a_ds}
 # add column type 
 a$type <- ifelse(a$method == "kick_net", "aquatic", "terrestrial")
-# remove NAs and 0s
+# remove NAs and 0s and missing order 
 a1 <- a |> filter(!is.na(length)) |> 
-          filter( length > 0)
+          filter( length > 0) |> 
+          filter(!is.na(order))
+
+
+```
+
+```{r check}
+
+a1  |> 
+  summarise(
+    nas_in_length = sum(is.na(length)),
+    nonpositive_in_length = sum(length <= 0, na.rm = TRUE),
+    nas_in_order = sum(is.na(order))
+  )  |> 
+  mutate(
+    sentence = glue(
+      "There are {nas_in_length} NA values in 'length', ",
+      "{nonpositive_in_length} values in 'length' that are less than or equal to 0, ",
+      "and {nas_in_order} NA values in 'order' column."
+    )
+  )  |> 
+  pull(sentence)
+
 ```
 
 ### Save the processed data
 
 ```{r save_data_all}
 
-write.csv(a,here("data","processed","data_processed.csv"))
+write.csv(a1, here("data","processed","data_processed.csv"))
 
 ```
 
 ## From length to body mass
 
-We are going to estimate arthropod's body mass using taxon-­specific published length-­ weight coefficients. Remember that we are going to use the allometric relationship $W = a*L^b$, where $L$ is the arthropod's length in millimeters, $W$ is the dry weight in milligrams. $a$ and $b$ are constant coefficients.
+We are going to estimate arthropod's body mass (i.e. dry weight) using taxon-­specific published length-­weight coefficients. Remember that we are going to use the allometric relationship: $$W = a*L^b$$ {#eq-lw}where $W$ is the arthropod's dry weight in milligrams, $L$ is the arthropod's length in millimeters, $a$ and $b$ are constant coefficients.
 
 ### Load allometric coefficients
 
-Now we are going to load length-weight regression coefficients from [@vanleeuwen2025; @pomeranz2022].
+Now we are going to load length-weight coefficients from [@vanleeuwen2025].
 
 ```{r loadallometriccoeff}
-# Load coefficient datasets
-pom <- read_csv(here("data","raw","lw","pomeranz_2022.csv")) # Pomeranz et al. 2021 Glob Change Biology
 vl <- read_excel(here("data","raw","lw","van Leeuwen_2025.xlsx")) # van Leeuwen et al. 2025
 # load processed data 
 a <- read.csv(here("data","processed","data_processed.csv"))
 ```
 
-```{r}
-# --- 1. Fix datasets ---
-pom <- pom %>%
-  mutate(family = ifelse(family == "Helicopsychidae (case width)", "Helicopsychidae", family))
+We are going to validate the whole data frame by checking if any family is mapped to more than one order:
 
-vl <- vl %>%
+```{r order_con }
+# function by chatgpt
+check_family_order_consistency <- function(df) {
+  
+  df  |> 
+    group_by(family)  |> 
+    summarise(unique_orders = n_distinct(order),
+              orders = paste(unique(order), collapse = ", "),
+              .groups = "drop")  |> 
+    filter(unique_orders > 1)
+}
+
+# Run the check
+inconsistent_families <- check_family_order_consistency(a)
+
+# View results
+print(inconsistent_families)
+
+```
+
+Solve these mistakes:
+
+```{r rename_orders}
+a1 <- a %>%
+  mutate(order = case_when(
+    family == "Gerridae"       ~ "Hemiptera",
+    family == "Enchytraeidae"  ~ "Enchytraeida",
+    family == "Notonectidae"   ~ "Hemiptera",
+    TRUE                        ~ order  # keep all other orders unchanged
+  ))
+
+
+a1 |> filter(is.na(order)) |> count()
+
+```
+
+How many insect families have we collected?
+
+```{r howmany}
+# Get distinct order-family pairs
+distinct_table <- a |> 
+  distinct(order, family)
+
+# Render as dynamic (interactive) table
+datatable(distinct_table, 
+          options = list(pageLength = 10, autoWidth = TRUE))
+
+```
+
+Now I am going to take these steps:
+
+1.  I average by taxonomic family → from Van Leeuwen’s coefficients, compute mean `a` and `b` per `family`.\
+2.  Join family values → merge family-level coefficients into our data frame and calculate `dry_weight`.\
+3.  Find missing families → detect which families in our data frame still lack `dry_weight`.\
+4.  Final check → report which families in our data frame remain without `dry_weight`.
+
+```{r estimate_weight_by_family}
+# --- 1. Fix datasets ---
+vl <- vl  |> 
   filter(family != "Chironomidae (non-Tanypodinae)")
 
 # --- 2. Average coefficients per family ---
-vl_avg <- vl %>%
-  group_by(family) %>%
+vl_avg <- vl  |> 
+  group_by(family)  |> 
   summarise(
     a = mean(a, na.rm = TRUE),
     b = mean(b, na.rm = TRUE),
     .groups = "drop"
-  )
+  ) |> mutate(source = "van_leeuwen_2025")
 
-pom_avg <- pom %>%
-  group_by(family) %>%
-  summarise(
-    a = mean(a, na.rm = TRUE),
-    b = mean(b, na.rm = TRUE),
-    .groups = "drop"
-  )
+# Unique families in each dataset
+families_a  <- unique(a$family)
+families_vl <- unique(vl$family)
 
-# --- 3. First join with vl_avg (priority source) ---
-a <- a %>%
-  left_join(vl_avg, by = "family") %>%
+# Families in common
+common_families <- intersect(families_a, families_vl)
+
+# Count
+n_common <- length(common_families)
+
+# Print results
+cat("Number of families in common between 'a' and 'vl':", n_common, "\n")
+cat("Families in common:\n")
+print(common_families)
+
+# 3. join with vl_avg by family ID (priority source) ---
+a2 <- a1  |> 
+  left_join(vl_avg, by = "family")  |> 
   mutate(dry_weight = a * (length ^ b))
 
-# --- 4. Find families still missing after vl ---
-missing_fams <- a %>%
-  filter(is.na(dry_weight)) %>%
-  distinct(family)
-
-# --- 5. Complement with pom_avg for missing families ---
-a <- a %>%
-  left_join(
-    pom_avg %>% filter(family %in% missing_fams$family),
-    by = "family",
-    suffix = c("", "_pom")
-  ) %>%
-  mutate(
-    a = ifelse(is.na(a), a_pom, a),
-    b = ifelse(is.na(b), b_pom, b),
-    dry_weight = ifelse(is.na(dry_weight), a * (length ^ b), dry_weight)
-  ) %>%
-  select(-a_pom, -b_pom)
-
-# --- 6. Check if anything is still missing ---
-still_missing <- a %>%
-  filter(is.na(dry_weight)) %>%
-  distinct(family)
-
-cat("Number of families still missing after vl + pom:", nrow(still_missing), "\n")
-print(still_missing)
-
+# --- 4. Find families still missing  ---
+missing_fams <- a2  |> 
+  filter(is.na(dry_weight))  |> 
+  distinct(family, order)
+# --- Check for missing coefficients ---
+ a2  |> 
+  filter(is.na(dry_weight)) |> count()
 ```
 
-```{r}
-# --- Step 1: Prepare order-level averages from vl + pom ---
-vl_order <- vl %>%
-  group_by(order) %>%
-  summarise(
-    a = mean(a, na.rm = TRUE),
-    b = mean(b, na.rm = TRUE),
-    source = "van Leeuwen (order-level)",
-    .groups = "drop"
-  )
+### Gemini
 
-pom_order <- pom %>%
-  group_by(order) %>%
-  summarise(
-    a = mean(a, na.rm = TRUE),
-    b = mean(b, na.rm = TRUE),
-    source = "Pomeranz (order-level)",
-    .groups = "drop"
-  )
+The following R code creates a data frame named `coeffs_df` that holds all the family/order names, their corresponding `a` and `b` coefficients, and the scientific source from which the data was retrieved. I have used Gemini version 2.5 flash.
 
-# --- Step 2: Prioritise vl_order, then fill remaining from pom_order ---
-a <- a %>%
-  left_join(vl_order, by = "order", suffix = c("", "_order_vl")) %>%
-  mutate(
-    a = ifelse(is.na(a), a_order_vl, a),
-    b = ifelse(is.na(b), b_order_vl, b),
-    dry_weight = ifelse(is.na(dry_weight), a * (length ^ b), dry_weight)
-  ) %>%
-  select(-a_order_vl, -b_order_vl)
+```{r gemini_coeff}
+# Create the dataframe
+g <- data.frame(
+  family = c("Gammaridae", "Psychodidae", "Hydracarina", "Hydrobiidae", "Curculionidae", 
+             "Asellidae", "Sphaeriidae", "Physidae", "Lymnaeidae", "Dixidae", 
+             "Culicidae", "Bithyniidae", "Dugesiidae", "Scirtidae", "Glossiphoniidae", 
+             "Erpobdellidae", "Stratiomyidae", "Anthomyiidae", "Notonectidae", "Pleidae", 
+             "Ancylidae", "Astacidae", "Syrphidae", "Platycnemididae", "Dryopidae", 
+             "Nepidae", "Naucoridae", "Cantharidae", "Coccinellidae", "Latridiidae", 
+             "Staphylinidae", "Aphidoidea", "Panorpidae", "Carabidae", "Formicidae", 
+             "Vespidae", "Cucujidae", "Nitidulidae", "Mordellidae", "Monotomidae", 
+             "Forficulidae", "Psylloidea", "Phalacridae", "Erebidae", "Aphididae", 
+             "Julidae", "Cerambycidae", "Hemerobiidae", "Coccoidae", "Oniscidae", 
+             "Apionidae", "Mymaridae", "Psylliodes", "Thripidae", "Apoidea", 
+             "Pentatomidae", "Delphacidae", "Nabidae", "Ixodidae", "Thomisidae", 
+             "Sphaeriusidae", "Parasitidae", "Salticidae", "Enchytraeidae", 
+             "Polydesmidae", "Lithobiidae", "Phalangiidae", "Lepismatidae", 
+             "Phlaeothripidae", "Aeolothripidae", "Trogulidae", "Ectobiidae", 
+             "Polyxenidae", "Gryllidae", "Reduviidae", "Glomeridae", "Acrididae", 
+             "Berytidae", "Tettigoniidae", "Cochlostomatidae"),
+  order = c("Amphipoda", "Diptera", "Arachnida", "Gastropoda", "Coleoptera", 
+            "Isopoda", "Bivalvia", "Gastropoda", "Gastropoda", "Diptera", 
+            "Diptera", "Gastropoda", "Platyhelminthes", "Coleoptera", "Hirudinea", 
+            "Hirudinea", "Diptera", "Diptera", "Hemiptera", "Heteroptera", 
+            "Gastropoda", "Decapoda", "Diptera", "Odonata", "Coleoptera", 
+            "Heteroptera", "Heteroptera", "Coleoptera", "Coleoptera", "Coleoptera", 
+            "Coleoptera", "Hemiptera", "Mecoptera", "Coleoptera", "Hymenoptera", 
+            "Hymenoptera", "Coleoptera", "Coleoptera", "Coleoptera", "Coleoptera", 
+            "Dermaptera", "Hemiptera", "Coleoptera", "Lepidoptera", "Hemiptera", 
+            "Julida", "Coleoptera", "Neuroptera", "Hemiptera", "Isopoda", 
+            "Coleoptera", "Hymenoptera", "Coleoptera", "Thysanoptera", "Hymenoptera", 
+            "Hemiptera", "Hemiptera", "Hemiptera", "Ixodida", "Araneae", 
+            "Coleoptera", "Acari", "Araneae", "Enchytraeida", "Polydesmida", 
+            "Lithobiomorpha", "Opiliones", "Zygentoma", "Thysanoptera", 
+            "Thysanoptera", "Opiliones", "Blattodea", "Polyxenida", "Orthoptera", 
+            "Hemiptera", "Glomerida", "Orthoptera", "Hemiptera", "Orthoptera", 
+            "Architaenioglossa"),
+  a = c(0.052, 0.0028, 0.027, 0.054, 0.018, 0.058, 0.009, 0.054, 0.054, 0.0028, 
+        0.0028, 0.054, 0.015, 0.018, 0.013, 0.013, 0.0028, 0.0028, 0.002, 0.008, 
+        0.054, 0.012, 0.0028, 0.008, 0.018, 0.008, 0.008, 0.018, 0.018, 0.018, 
+        0.018, 0.002, 0.002, 0.018, 0.002, 0.002, 0.018, 0.018, 0.018, 0.018, 
+        0.01, 0.002, 0.018, 0.018, 0.002, 0.018, 0.018, 0.002, 0.002, 0.058, 
+        0.018, 0.002, 0.018, 0.002, 0.002, 0.002, 0.002, 0.002, 0.027, 0.027, 
+        0.018, 0.027, 0.027, 0.018, 0.018, 0.01, 0.027, 0.001, 0.002, 
+        0.002, 0.027, 0.01, 0.018, 0.006, 0.002, 0.018, 0.006, 0.002, 0.006, 
+        0.054),
+  b = c(2.658, 3.398, 3.011, 2.518, 2.87, 2.63, 2.766, 2.518, 2.518, 3.398, 
+        3.398, 2.518, 2.45, 2.87, 3.125, 3.125, 3.398, 3.398, 3.12, 2.92, 
+        2.518, 2.77, 3.398, 3.05, 2.87, 2.92, 2.92, 2.87, 2.87, 2.87, 
+        2.87, 3.12, 3.12, 2.87, 3.05, 3.05, 2.87, 2.87, 2.87, 2.87, 
+        2.88, 3.12, 2.87, 2.95, 3.12, 2.87, 2.87, 3.12, 3.12, 2.63, 
+        2.87, 3.05, 2.87, 3.12, 3.05, 3.12, 3.12, 3.12, 3.011, 3.011, 
+        2.87, 3.011, 3.011, 2.87, 2.87, 2.88, 3.011, 3.2, 3.12, 
+        3.12, 3.011, 2.88, 2.87, 3.05, 3.12, 2.87, 3.05, 3.12, 3.05, 
+        2.518),
+  source = c("Benke et al. (1999)", "Benke et al. (1999)", "Benke et al. (1999)", "Benke et al. (1999)", "Rogers et al. (1976)", 
+             "Benke et al. (1999)", "Benke et al. (1999)", "Benke et al. (1999)", "Benke et al. (1999)", "Benke et al. (1999)", 
+             "Benke et al. (1999)", "Benke et al. (1999)", "Benke et al. (1999)", "Rogers et al. (1976)", "Benke et al. (1999)", 
+             "Benke et al. (1999)", "Benke et al. (1999)", "Benke et al. (1999)", "Rogers et al. (1976)", "Benke et al. (1999)", 
+             "Benke et al. (1999)", "Benke et al. (1999)", "Benke et al. (1999)", "Benke et al. (1999)", "Rogers et al. (1976)", 
+             "Benke et al. (1999)", "Benke et al. (1999)", "Rogers et al. (1976)", "Rogers et al. (1976)", "Rogers et al. (1976)", 
+             "Rogers et al. (1976)", "Rogers et al. (1976)", "Rogers et al. (1976)", "Rogers et al. (1976)", "Rogers et al. (1976)", 
+             "Rogers et al. (1976)", "Rogers et al. (1976)", "Rogers et al. (1976)", "Rogers et al. (1976)", "Rogers et al. (1976)", 
+             "Rogers et al. (1976)", "Rogers et al. (1976)", "Rogers et al. (1976)", "Rogers et al. (1976)", "Rogers et al. (1976)", 
+             "Rogers et al. (1976)", "Rogers et al. (1976)", "Rogers et al. (1976)", "Rogers et al. (1976)", "Benke et al. (1999)", 
+             "Rogers et al. (1976)", "Rogers et al. (1976)", "Rogers et al. (1976)", "Rogers et al. (1976)", "Rogers et al. (1976)", 
+             "Rogers et al. (1976)", "Rogers et al. (1976)", "Rogers et al. (1976)", "Benke et al. (1999)", "Benke et al. (1999)", 
+             "Rogers et al. (1976)", "Benke et al. (1999)", "Benke et al. (1999)", "Rogers et al. (1976)", 
+             "Rogers et al. (1976)", "Rogers et al. (1976)", "Benke et al. (1999)", "Rogers et al. (1976)", 
+             "Rogers et al. (1976)", "Rogers et al. (1976)", "Benke et al. (1999)", "Rogers et al. (1976)", 
+             "Rogers et al. (1976)", "Rogers et al. (1976)", "Rogers et al. (1976)", "Rogers et al. (1976)", "Rogers et al. (1976)", 
+             "Rogers et al. (1976)", "Rogers et al. (1976)", "Benke et al. (1999)")
+)
 
-# Step 3: Complement with pom_order if still missing
-a <- a %>%
-  left_join(pom_order, by = "order", suffix = c("", "_order_pom")) %>%
-  mutate(
-    a = ifelse(is.na(a), a_order_pom, a),
-    b = ifelse(is.na(b), b_order_pom, b),
-    dry_weight = ifelse(is.na(dry_weight), a * (length ^ b), dry_weight)
-  ) %>%
-  select(-a_order_pom, -b_order_pom)
-
-# --- Step 4: Report what’s still missing ---
-still_missing <- a %>%
-  filter(is.na(dry_weight)) %>%
-  distinct(order, family)
-
-cat("Number of families still missing after order-level fill:", nrow(still_missing), "\n")
-print(still_missing)
-
+# Save the dataframe to a CSV file
+write.csv(coeffs_df, file.path("data", "raw", "lw", "gemini.csv"), row.names = FALSE)
 ```
 
-```{r}
-nas <- a |> filter(is.na(dry_weight))
-```
+```{r fillmissingfamilies}
 
-```{r}
-# Load the necessary library
-library(dplyr)
-
-# Assuming your dataframe is named 'a' and has columns 'order', 'family', and a column for length (e.g., 'length_mm')
-# Make sure to replace 'your_length_column' with the actual name of your length column.
-
-# Step 1: Assign a and b coefficients based on order/family
-a <- a %>%
+a2 <- a1 %>%
   mutate(
-    a_coeff = case_when(
-      order %in% c("Arachnida", "Araneae", "Ixodida", "Acari", "Opiliones") ~ 0.035,
-      order == "Gastropoda" ~ 0.28,
-      order == "Heteroptera" ~ 0.054,
-      order %in% c("Hymenoptera", "Mecoptera", "Neuroptera") ~ 0.007,
-      order == "Dermaptera" ~ 0.007,
-      order == "Zygentoma" ~ 0.002,
-      order == "Orthoptera" ~ 0.005,
-      TRUE ~ 0.005 # Default coefficient for all other orders
+    a = case_when(
+      is.na(a) & family %in% g$family & order %in% g$order ~ g$a[match(paste(family, order), paste(g$family, g$order))],
+      TRUE ~ a
     ),
-    b_coeff = case_when(
-      order %in% c("Arachnida", "Araneae", "Ixodida", "Acari", "Opiliones") ~ 2.6,
-      order == "Gastropoda" ~ 2.8,
-      order == "Heteroptera" ~ 2.62,
-      order %in% c("Hymenoptera", "Mecoptera", "Neuroptera") ~ 2.62,
-      order == "Dermaptera" ~ 2.92,
-      order == "Zygentoma" ~ 3.42,
-      order == "Orthoptera" ~ 2.89,
-      TRUE ~ 2.89 # Default coefficient for all other orders
-    )
+    b = case_when(
+      is.na(b) & family %in% g$family & order %in% g$order ~ g$b[match(paste(family, order), paste(g$family, g$order))],
+      TRUE ~ b
+    ),
+    source = case_when(
+      is.na(source) & family %in% g$family & order %in% g$order ~ g$source[match(paste(family, order), paste(g$family, g$order))],
+      TRUE ~ source
+    ),
+    dry_weight = ifelse(is.na(dry_weight), a * (length ^ b), dry_weight)
   )
 
-# Step 2: Estimate the dry_weight for rows where it is missing
-# This step uses your defined a and b coefficients to calculate dry weight
-# Replace 'your_length_column' with the actual name of your column containing body length.
-a <- a %>%
-  mutate(
-    dry_weight = ifelse(is.na(dry_weight), a_coeff * (length^b_coeff), dry_weight)
-  )
-
-# --- Step 3: Check for remaining missing values ---
-still_missing_after_fill <- a %>%
-  filter(is.na(dry_weight)) %>%
-  distinct(order, family)
-
-cat("\nNumber of families still missing after allometric fill:", nrow(still_missing_after_fill), "\n")
-print(still_missing_after_fill)
 ```
-
-I am going to follow these steps:
-
-1.  I will process the van Leeuwen (2025) dataset by averaging the coefficients $a$ and $b$ for each arthropod family, in case multiple entries exist for the same family.
-2.  I will join these averaged coefficients to my observed arthropod dataset (`m4`) based on the family column.
-3.  I will calculate the dry weight of each individual using the regression formula $W = a * L^b$, where $W$ is dry weight and $L$ is body length.
-4.  For families in `m4` that do not have a corresponding $a$ and $b$ in [@vanleeuwen2025], I will identify them as missing.
-5.  I will process the Pomeranz (2022) dataset similarly, averaging $a$ and $b$ for families with multiple entries.
-6.  I will join the Pomeranz coefficients to the missing families from the previous step and calculate their dry weights using the same formula $W = a * L^b$.
-7.  For the remaining 20 families for which no family-level coefficients exist, I will use the van Leeuwen data set to calculate **order-level averages** of $a$ and $b$.
-8.  Finally, I will identify any families that still do not have coefficients in either data set after these steps.
 
 ### Check for NAs and 0s
 
 ```{r check_nas_0}
-nas <- a |> filter(is.na(dry_weight) )
+# --- Check for missing coefficients ---
+missing_obs = a2 %>%
+  filter(is.na(dry_weight)) 
 
-z = a |> filter(dry_weight == 0  )
+# Unique families/orders
+missing_fams <- missing_obs %>%
+  distinct(family, order)
+
+# Counts
+n_unique <- nrow(missing_fams)
+n_total  <- nrow(missing_obs)
+
+# Print results
+cat("There are", n_unique, "unique families/orders still missing coefficients,",
+    "covering a total of", n_total, "observations.\n")
+
+missing_fams
 ```
 
 Remove unnecessary columns
@@ -899,23 +971,21 @@ a1 = a |> select(c("site","location","order","family","length","dry_weight" ,"ec
 ```{r save_data_lw}
 
 write.csv(a1 , here("data","processed","data.csv"))
-
+a1 = read.csv(here("data","processed","data.csv"))
 ```
 
 ### Visualize 
 
-```{r}
-a1 = read.csv(here("data","processed","data.csv"))
-```
+```{r check_negative}
 
-```{r hist_kick}
-
-a1 %>%
-  group_by(method) %>%
+a1  |> 
+  group_by(method)  |> 
   summarise(
     zeros = sum(dry_weight == 0, na.rm = TRUE),
     negatives = sum(dry_weight < 0, na.rm = TRUE)
   )
+
+neg = a1  |> filter(dry_weight <0 )
 ```
 
 ```{r weight_kick}
@@ -930,7 +1000,17 @@ ggplot( aes(x = dry_weight, fill = location)) +
   facet_wrap(~ location) 
 ```
 
+Are the predictors varying by site and location?
+
+```{r plot_pred_location_site}
+
+```
+
 ::: callout-important
+How do we estimate the net effect of beaver on ISD if there is also the human influence variable that cofound it ?
+:::
+
+::: callout-warning
 Note that ISD relationships are sensitive to the under sampling of small body sizes. @perkins2018 sampled benthic macroinvertebrates using comparable methods and found that body sizes smaller than 0.0026 mg were under sampled. Therefore, you should find and set the minimum invertebrate body size before estimating ISD relationships to avoid the under sampling of small body sizes.
 :::
 
