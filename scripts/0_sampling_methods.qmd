@@ -35,6 +35,9 @@ library(knitr)
 library(ggdist)
 library(readxl)
 library(DT)
+library(rgbif)
+library(dplyr)
+library(readr)
 ```
 
 ```{r ggplot_theme}
@@ -733,6 +736,74 @@ vl <- read_excel(here("data","raw","lw","van Leeuwen_2025.xlsx")) # van Leeuwen 
 a <- read.csv(here("data","processed","data_processed.csv"))
 ```
 
+Clean taxonomy:
+
+```{r}
+a1 <- a  |> 
+  mutate(order = case_when(
+    family == "Gerridae"       ~ "Hemiptera",
+    family == "Enchytraeidae"  ~ "Enchytraeida",
+    family == "Notonectidae"   ~ "Hemiptera",
+    TRUE                        ~ order  # keep all other orders unchanged
+  ))
+# ----------------------------
+# Script: validate_and_correct_family_order.R
+# ---- Load your dataset ----
+df <- a1
+
+# Standardize NA-like entries
+df$family[df$family %in% c("<NA>", "NA", "")] <- NA_character_
+df$order[df$order %in% c("<NA>", "NA", "")] <- NA_character_
+
+# ---- Step 1: extract unique families ----
+families <- unique(na.omit(df$family))
+
+# ---- Step 2: function to query GBIF backbone ----
+get_order_from_gbif <- function(fam) {
+  res <- try(rgbif::name_backbone(name = fam, rank = "family"), silent = TRUE)
+  
+  if (inherits(res, "try-error") || is.null(res$usageKey)) {
+    return(data.frame(family = fam, backbone_order = NA, source = "GBIF_fail"))
+  }
+  
+  order_name <- NA
+  if (!is.null(res$order) && res$order != "") {
+    order_name <- res$order
+  } else {
+    cl <- try(rgbif::name_usage(res$usageKey)$classification, silent = TRUE)
+    if (!inherits(cl, "try-error") && "rank" %in% names(cl)) {
+      ord <- cl$name[tolower(cl$rank) == "order"]
+      if (length(ord) > 0) order_name <- ord[1]
+    }
+  }
+  
+  data.frame(family = fam, backbone_order = order_name, source = "GBIF", stringsAsFactors = FALSE)
+}
+
+# ---- Step 3: query all families ----
+res_list <- lapply(families, get_order_from_gbif)
+backbone_df <- bind_rows(res_list)
+
+# ---- Step 4: join back to unique pairs ----
+pairs <- df %>%
+  select(family, order) %>%
+  distinct()
+
+validated <- pairs %>%
+  left_join(backbone_df, by = "family") %>%
+  mutate(status = case_when(
+    is.na(order) & !is.na(backbone_order) ~ "provided_missing",
+    !is.na(order) & !is.na(backbone_order) & tolower(order) == tolower(backbone_order) ~ "match",
+    !is.na(order) & !is.na(backbone_order) & tolower(order) != tolower(backbone_order) ~ "mismatch",
+    TRUE ~ "unresolved"
+  ))
+
+# ---- Step 6: create corrected dataframe ----
+a2 <- df %>%
+  left_join(backbone_df, by = "family") %>%
+  mutate(order_corrected = ifelse(!is.na(backbone_order), backbone_order, order))
+```
+
 We are going to validate the whole data frame by checking if any family is mapped to more than one order:
 
 ```{r order_con }
@@ -748,34 +819,18 @@ check_family_order_consistency <- function(df) {
 }
 
 # Run the check
-inconsistent_families <- check_family_order_consistency(a)
+inconsistent_families <- check_family_order_consistency(a2)
 
 # View results
 print(inconsistent_families)
-
-```
-
-Solve these mistakes:
-
-```{r rename_orders}
-a1 <- a %>%
-  mutate(order = case_when(
-    family == "Gerridae"       ~ "Hemiptera",
-    family == "Enchytraeidae"  ~ "Enchytraeida",
-    family == "Notonectidae"   ~ "Hemiptera",
-    TRUE                        ~ order  # keep all other orders unchanged
-  ))
-
-
-a1 |> filter(is.na(order)) |> count()
-
+a2 |> filter(is.na(order)) |> count()
 ```
 
 How many insect families have we collected?
 
 ```{r howmany}
 # Get distinct order-family pairs
-distinct_table <- a |> 
+distinct_table <- a2 |> 
   distinct(order, family)
 
 # Render as dynamic (interactive) table
@@ -806,7 +861,7 @@ vl_avg <- vl  |>
   ) |> mutate(source = "van_leeuwen_2025")
 
 # Unique families in each dataset
-families_a  <- unique(a$family)
+families_a  <- unique(a2$family)
 families_vl <- unique(vl$family)
 
 # Families in common
@@ -821,17 +876,19 @@ cat("Families in common:\n")
 print(common_families)
 
 # 3. join with vl_avg by family ID (priority source) ---
-a2 <- a1  |> 
+a3 <- a2  |> 
   left_join(vl_avg, by = "family")  |> 
   mutate(dry_weight = a * (length ^ b))
 
+a3 |> filter(is.na(order)) |> count()
 # --- 4. Find families still missing  ---
-missing_fams <- a2  |> 
+missing_fams <- a3  |> 
   filter(is.na(dry_weight))  |> 
   distinct(family, order)
 # --- Check for missing coefficients ---
- a2  |> 
-  filter(is.na(dry_weight)) |> count()
+b = a3  |> filter(is.na(dry_weight)) 
+
+write.csv(a3, here("data","processed","a3.csv"))
 ```
 
 ### Gemini
@@ -917,24 +974,6 @@ write.csv(coeffs_df, file.path("data", "raw", "lw", "gemini.csv"), row.names = F
 ```
 
 ```{r fillmissingfamilies}
-
-a2 <- a1 %>%
-  mutate(
-    a = case_when(
-      is.na(a) & family %in% g$family & order %in% g$order ~ g$a[match(paste(family, order), paste(g$family, g$order))],
-      TRUE ~ a
-    ),
-    b = case_when(
-      is.na(b) & family %in% g$family & order %in% g$order ~ g$b[match(paste(family, order), paste(g$family, g$order))],
-      TRUE ~ b
-    ),
-    source = case_when(
-      is.na(source) & family %in% g$family & order %in% g$order ~ g$source[match(paste(family, order), paste(g$family, g$order))],
-      TRUE ~ source
-    ),
-    dry_weight = ifelse(is.na(dry_weight), a * (length ^ b), dry_weight)
-  )
-
 ```
 
 ### Check for NAs and 0s
