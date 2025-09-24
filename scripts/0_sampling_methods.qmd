@@ -736,7 +736,7 @@ vl <- read_excel(here("data","raw","lw","van Leeuwen_2025.xlsx")) # van Leeuwen 
 a <- read.csv(here("data","processed","data_processed.csv"))
 ```
 
-Clean taxonomy:
+Clean taxonomy mismpelling , if any. I use chatGPT:
 
 ```{r}
 a1 <- a  |> 
@@ -746,9 +746,7 @@ a1 <- a  |>
     family == "Notonectidae"   ~ "Hemiptera",
     TRUE                        ~ order  # keep all other orders unchanged
   ))
-# ----------------------------
-# Script: validate_and_correct_family_order.R
-# ---- Load your dataset ----
+## ---- Load your dataset ----
 df <- a1
 
 # Standardize NA-like entries
@@ -804,7 +802,7 @@ a2 <- df %>%
   mutate(order_corrected = ifelse(!is.na(backbone_order), backbone_order, order))
 ```
 
-We are going to validate the whole data frame by checking if any family is mapped to more than one order:
+We are going to validate the whole data frame by checking if family is mapped to more than one order:
 
 ```{r order_con }
 # function by chatgpt
