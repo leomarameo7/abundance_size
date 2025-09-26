@@ -51,11 +51,11 @@ dat |>
   count()
 # 1,157 rows which have family IDs that are NOT in pomeranz
 1157 / 15072 # ~8 %
-dat |>
-  filter(family %in% fams_not_in_pz_or_vl) |>
-  count()
-# 883 not in either pomeranz or van leeuwen
-883/15072 #~6%
+#dat |>
+#  filter(family %in% fams_not_in_pz_or_vl) |>
+#  count()
+## 883 not in either pomeranz or van leeuwen
+#883/15072 #~6%
 
 ## Moving forward with pomeranz coefs ####
 lw_narrow <- lw_pomz |>
@@ -123,19 +123,33 @@ s1_isd_data = s1|>
   filter(dw > xmin) 
 
 ### Leo comment: I am worried about that using this approach we lost 1000 - 398 = 602 observations. ####
+#### Yeah, you do usually end up losing a lot of data
+#### But when you keep these undersampled sizes, the ISD lambda estimates are unreliable. 
+### having a few good data points is better than having a lot of "bad" data points. 
+
+
 # loading isdbayes and 
 # just do with all dataset
 # first remove NAs observations
 dat_dw_1 = dat_dw |> filter(!is.na(dw)) 
 # then apply same code as Justin
+#####=========================================#
+# the below code is estimating one xmin for the whole data set which is incorrect. 
+# need to estimate one xmin for each sample alone, see my code section below
+# also, I don't think there is a `d` object in this session, so I'm not sure how it's calculating the xmin
+#####=========================================#
 powerlaw = conpl$new(d$dw) # get power law estimate from poweRlaw package
 xmin <- estimate_xmin(powerlaw)$xmin
 xmin
+# oh... this is the xmin for just the site == "Hemishofen", sample == "Inflow_aquatic" calculated above  
+
 range(s1$dw)
 dat_dw_1$xmin <- xmin
 
 dat_dw_2 <- dat_dw_1 |>
   filter(dw > xmin) # we lose so many data ! 
+#### Yeah this is a lot, but it will probably be different once we have an xmin per site:sample combo
+# also, once we have equations for more taxa, we will have more dw estimates and will (hopefully) shift that undersampled threshold to the left (i.e., keep more data)
 
 
 library(brms)
@@ -174,8 +188,9 @@ ggplot(isd_posts,
        aes(x = .epred)) +
   tidybayes::stat_halfeye()
 
-
-
+#=========================================#
+# estimate xmin from multiple samples ####
+#=========================================#
 # trying again with all samples from that site, just to see what happens
 s2 <- dat_dw |>
   filter(site == "Hemishofen",
