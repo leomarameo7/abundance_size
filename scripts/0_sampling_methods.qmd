@@ -724,7 +724,7 @@ write.csv(a1, here("data","processed","data_processed.csv"))
 
 ## From length to body mass
 
-We are going to estimate arthropod's body mass (i.e. dry weight) using taxon-­specific published length-­weight coefficients. Remember that we are going to use the allometric relationship: $$W = a*L^b$$ {#eq-lw}where $W$ is the arthropod's dry weight in milligrams, $L$ is the arthropod's length in millimeters, $a$ and $b$ are constant coefficients.
+We are going to estimate arthropod's body mass (i.e. dry weight) using taxon-­specific published length-­weight coefficients. Remember that we are going to use the allometric relationship: $$W = a*L^b$$ {#eq-lw} $W$ is the arthropod's dry weight in milligrams, $L$ is the arthropod's length in millimeters, $a$ and $b$ are constant coefficients.
 
 ### Load allometric coefficients
 
@@ -1011,7 +1011,7 @@ write.csv(a1 , here("data","processed","data.csv"))
 a1 = read.csv(here("data","processed","data.csv"))
 ```
 
-### Visualize 
+### Visualize
 
 ```{r check_negative}
 

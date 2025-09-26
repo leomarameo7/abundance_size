@@ -90,7 +90,7 @@ dat_lw |>
 
 
 # estimate dw ####
-# assuming that size = length in mm?
+# assuming that size = length in mm? Yes. it is. 
 # also assuming that the total area sampled for each "sample" is approximately the same
 # if there are differences in area sampled, we would need to standardize this in some way. 
 dat_dw <- dat_lw |>
@@ -119,10 +119,25 @@ xmin <- estimate_xmin(powerlaw)$xmin
 xmin
 range(s1$dw)
 s1$xmin <- xmin
-s1_isd_data <- s1 |>
-  filter(dw > xmin)
+s1_isd_data = s1|>
+  filter(dw > xmin) 
 
+### Leo comment: I am worried about that using this approach we lost 1000 - 398 = 602 observations. ####
 # loading isdbayes and 
+# just do with all dataset
+# first remove NAs observations
+dat_dw_1 = dat_dw |> filter(!is.na(dw)) 
+# then apply same code as Justin
+powerlaw = conpl$new(d$dw) # get power law estimate from poweRlaw package
+xmin <- estimate_xmin(powerlaw)$xmin
+xmin
+range(s1$dw)
+dat_dw_1$xmin <- xmin
+
+dat_dw_2 <- dat_dw_1 |>
+  filter(dw > xmin) # we lose so many data ! 
+
+
 library(brms)
 library(isdbayes)
 library(tidybayes)
@@ -196,7 +211,7 @@ s2_isd_data |>
 s2_isd_data <- s2_isd_data |>
   sample_n(1000, replace = TRUE)
 
-fit2 <- brm(dw | vreal(counts, xmin, xmax)~sample,
+fit2 <- brm(dw | vreal(counts, xmin, xmax)~ sample,
             data = s2_isd_data,
             stanvars = stanvars,
             family = paretocounts(),
