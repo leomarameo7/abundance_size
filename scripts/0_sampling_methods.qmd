@@ -891,6 +891,13 @@ write.csv(a3, here("data","processed","a3.csv"))
 
 ### Gemini
 
+Load data
+
+```{r}
+
+a3 = read.csv(here("data","processed","a3.csv"))
+```
+
 The following R code creates a data frame named `coeffs_df` that holds all the family/order names, their corresponding `a` and `b` coefficients, and the scientific source from which the data was retrieved. I have used Gemini version 2.5 flash.
 
 ```{r gemini_coeff}
@@ -971,7 +978,12 @@ g <- data.frame(
 write.csv(coeffs_df, file.path("data", "raw", "lw", "gemini.csv"), row.names = FALSE)
 ```
 
+Maybe Justin can contribute ....
+
 ```{r fillmissingfamilies}
+
+
+
 ```
 
 ### Check for NAs and 0s
