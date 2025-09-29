@@ -60,6 +60,8 @@ dat |>
 ## Moving forward with pomeranz coefs ####
 lw_narrow <- lw_pomz |>
   select(taxon, a, b, formula_type)
+### Leo : what are you doing here, Justin ? ####
+
 dat_lw <- dat |>
   select(laufnummer:sample, taxon_lowest, size) |>
   left_join(lw_narrow, by = join_by(taxon_lowest == taxon))
