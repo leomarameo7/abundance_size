@@ -3,8 +3,6 @@ title: "Does beaver damming influence arthropods' individual size distribution?"
 author: 
 - name: Leonardo Capitani 
   email: leonardo.capitani@eawag.ch
-- name: Francesco Pomati
-  email: francesco.pomati@eawag.ch
 date: "10/01/2025"
 date-modified: last-modified
 execute:
@@ -169,6 +167,24 @@ datatable(
 
 ::: callout-note
 Question: What if we group only by `location` ? Since `site` will be consider as random effect ... or not consider at all.. maybe we can assume that all individuals that were collected in the, for example, `control` location, follows the same Pareto distribution.
+:::
+
+If we go on with this approach, then we are going to loose for the kick net method:
+
+```{r trigger}
+# --- Join back to remove observations ---
+k3 <- k2 %>%
+  left_join(removal_summary %>% select(site, location, xmin_est),
+            by = c("site", "location")) %>%
+  filter(dw >= xmin_est) %>%       # remove observations below xmin
+  select(-xmin_est)                # drop helper column if not needed
+```
+
+::: callout-important
+We trigger `r nrow(k2) - nrow(k3)` observations (`r round((nrow(k2) - nrow(k3)) / nrow(k2) * 100, 1)`%).
+
+Remaining observations are:\
+`r paste(k3 %>% count(location) %>% mutate(txt = paste0(location, " = ", n)) %>% pull(txt), collapse = "; ")`.
 :::
 
 ## Replicate the vignettes for `isdbayes`
