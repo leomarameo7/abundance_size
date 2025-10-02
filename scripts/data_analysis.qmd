@@ -1,0 +1,394 @@
+---
+title: "Does beaver damming influence arthropods' individual size distribution?"
+author: 
+- name: Leonardo Capitani 
+  email: leonardo.capitani@eawag.ch
+- name: Francesco Pomati
+  email: francesco.pomati@eawag.ch
+date: "10/01/2025"
+date-modified: last-modified
+execute:
+  echo: true
+  warning: false
+  message: false
+format: 
+      html:
+          toc: true
+          code-fold: true
+          code-tools: true
+          code-link: true
+          embed-resources: true
+      pdf:
+             keep-tex: true
+editor: visual
+editor_options: 
+  chunk_output_type: console
+bibliography: references.bib
+csl: eco_lett.csl
+---
+
+```{r loadlib}
+library(tidyverse)
+library(DT)
+library(here)
+library(dplyr)
+library(poweRlaw)
+library(isdbayes)
+library(brms)
+library(tidybayes)
+```
+
+```{r ggplot_theme}
+newtheme <- theme_bw(base_size = 14) 
+theme_set(newtheme)
+```
+
+## Load data
+
+We are going to load the kick-net data set.
+
+```{r load_data}
+k = read.csv(here("data", "processed", "kicknet_clean.csv"))
+```
+
+### Standardize human influence
+
+```{r stardize}
+
+k2 <- k %>% 
+  mutate(across(c(human_influence), 
+                ~ .x %>% scale() %>% as.vector(), 
+                .names = "{.col}_z"),
+         ecomorphology = as.factor(ecomorphology))
+```
+
+::: callout-note
+Q: Does ecomorphology vary by site and by location ?
+:::
+
+```{r variation_ecomorphology}
+
+ggplot(k2, aes( x = site, y = ecomorphology))+
+  geom_point()+
+  theme_bw(base_size = 14)+ 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
+ggplot(k2, aes( x = location, y = ecomorphology))+
+  geom_point()+
+  theme_bw(base_size = 14)+ 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+```
+
+Ecomorphology vary by site and by location.
+
+::: callout-note
+Does human influence vary by site and location ?
+:::
+
+```{r human_var_sentences}
+
+sentences <- k2 %>%
+  mutate(human_influence_z = round(human_influence_z, 2)) %>%
+  group_by(site) %>%
+  summarise(
+    all_equal = n_distinct(human_influence_z) == 1,
+    details = if (n_distinct(human_influence_z) == 1) {
+      paste0("At site ", first(site), 
+             ", all locations have the same human_influence_z value of ", 
+             first(human_influence_z), ".")
+    } else {
+      paste0("At site ", site, " and location ", location, 
+             ", the human_influence_z value is ", human_influence_z, ".",
+             collapse = " ")
+    },
+    .groups = "drop"
+  ) %>%
+  pull(details)
+
+sentences
+
+
+```
+
+```{r human_influence_variation}
+
+ggplot(k2, aes( x = site, y = human_influence_z, color = location)) + 
+  geom_point()+ 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+Human influence does not vary by site.
+
+## Addressing Undersampling
+
+In field collections of body sizes, small organisms are commonly under-sampled. This contradicts that assumption of an exponential decline in frequency as body size increases and can lead to dramatically poor estimates of lambda [@clauset2009]. For this reason, [Jeff Wesner](jeff.wesner@usd.edu) and [Justin Pomeranz](jfpomeranz@gmail.com) strongly recommend checking for and removing under-sampled small sizes.
+
+### Find and remove biased sizes
+
+How do we know if body sizes are under-sampled? One option is to use the `estimate_xmin()` function from the `poweRlaw` package [@gillespie2015] (to install the package read [here](https://github.com/csgillespie/poweRlaw)). It first fits the data to a power law (unbounded, but that’s OK here). Then it uses Kolmogorov-Smirnoff sampling to find the minimum body mass above which the data follow a power law.
+
+::: callout-warning
+Jeff Wesner:
+
+This trimming procedure is sample-specific, not global. So if you have multiple samples, then you’ll need to run the `estimate_xmin` procedure on each sample, trim with a unique `xmin_est`, and recalculate xmin for each sample.
+:::
+
+```{r estimate_xmin}
+#  Compute xmin per group and summarize removal info
+removal_summary <- k2 %>%
+  group_by(site, location) %>%
+  summarise(
+    # Fit continuous power law and estimate xmin
+    xmin_est = round({
+      temp_mod <- conpl$new(dw)
+      estimate_xmin(temp_mod)$xmin
+    }, 2),
+    # Total number of observations in this group
+    total_obs = n(),
+    # Number of observations below xmin (to be removed)
+    removed_obs = sum(dw < xmin_est),
+    # Proportion of observations below xmin
+    prop_removed = round(removed_obs / total_obs *100, 1),
+    .groups = "drop"
+  )
+# just a dynamic data table to see what is going on: 
+datatable(
+  removal_summary,
+  options = list(
+    pageLength = 10,   # rows per page
+    autoWidth = TRUE,  # auto adjust column widths
+    searching = TRUE,  # allow search/filter
+    ordering = TRUE    # allow sorting
+  ),
+  rownames = FALSE,
+  caption = "Observations Removed per Site-Location"
+)
+```
+
+> Jeff Wesner: note that the trimming can be quite large despite the relatively small `xmin_est` value. It can sometimes remove much more (such as 25 or 50%). That is usually not a problem as long as the remaining data has enough individuals to fit reliably, usually 300 or so.
+
+::: callout-note
+Question: What if we group only by `location` ? Since `site` will be consider as random effect ... or not consider at all.. maybe we can assume that all individuals that were collected in the, for example, `control` location, follows the same Pareto distribution.
+:::
+
+## Replicate the vignettes for `isdbayes`
+
+You can see the original vignettes [here](https://github.com/jswesner/isdbayes).
+
+First, simulate some power law data using `rparetocounts()`. The code below simulates 300 body sizes from a power law with exponent lambda = -1.2, xmin = 1, and xmax = 1000.
+
+```{r simdata}
+
+# simulate data
+
+dat = tibble(dw = rparetocounts(n = 300,  lambda = -1.2,  xmin = 1, xmax = 1000)) |> 
+  mutate(xmin = min(dw),
+         xmax = max(dw),
+         counts = 1)
+```
+
+## Model fit
+
+Next estimate the power law exponent using `brms`. The model below (`fit1`) is an intercept only model, where x are the body sizes and counts, xmin, and xmax are included in `vreal()`. The use of `vreal` has nothing to do with the model per se. It is simply required wording from `brms` when including custom families. Similarly, `stanvars` is required wording that contains the custom likelihood parameters. As long as `isdbayes` is loaded, then `stanvars = stanvars` will work. It will stay the same regardless of changes to the model structure (like new predictors or varying intercepts).
+
+```{r set_formula}
+# formula 
+bform = bf(dw | vreal(counts, xmin, xmax) ~ 0 + Intercept, # 0 + Intercept is the same as ~ 1, but the first is an explicit way to code the intercept. While the second is implicit. In this case the intercept is our lambda 
+           family = paretocounts())
+
+# see the default / improper priors that the mdoel will use 
+default_prior(object = bform, data = dat )
+#### set priors ####
+
+pr  <- c( # prior for the average (intercept) of predictors 
+  set_prior("normal(-1.20, 0.5)", coef = "Intercept") # this is lambda ! )
+  ) 
+### validate priors: check if we have correctly state the priors
+
+validate_prior(prior = pr, formula = bform, data = dat )
+
+# yes ! Now our model is expecting to find lamba values in between -1.2 +- 0.5 
+```
+
+```{r fit_model}
+
+fit0 = brm(formula = bform, 
+          data = dat,
+          stanvars = stanvars,    # required for truncated Pareto
+          family = paretocounts(),# required for truncated Pareto
+          prior = pr, # here we set the priors 
+          chains = 3, 
+          warmup = 500, 
+          iter = 1000, 
+          seed = 7, # allow exact replication of results 
+          file = here("results","models","fit0"), # save the model. Please set your path folder. Note that if you want to refit the model, then you need to hide/deactivate this line of code 
+        sample_prior = "no"  # default option. Indicate if draws from priors should be drawn additionally to the posterior draws.
+          )
+```
+
+```{r summary}
+
+summary(fit0)
+```
+
+Plot posterior distribution of lambda:
+
+```{r posterior_draws}
+p = fit0 |> 
+   add_epred_draws(seed = 9, # assure reproducibility  
+                      ndraws = 1000,
+                      newdata = dat)
+```
+
+```{r plot_lambda}
+p |> 
+  ggplot(aes(x = .epred, y = 0)) + 
+  stat_halfeye() + 
+  labs(x = expression(lambda))+
+  theme_bw(base_size = 14)+
+  theme(
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank()
+  )
+```
+
+## Fit multiple size distributions with a fixed factor
+
+Now we are going to simulate data sampled in four different `locations.`
+
+```{r simdata_multilevels}
+
+control = rparetocounts(lambda = -1.8) # `lambda` is required wording from brms. in this case it means the lambda exponent of the ISD
+inflow = rparetocounts(lambda = -1.5)
+pool = rparetocounts(lambda = -1.2)
+outflow = rparetocounts(lambda = -1.1)
+
+isd_data = tibble(control = control,
+                  inflow = inflow,
+                  pool = pool,
+                  outflow = outflow) |> 
+  pivot_longer(cols = everything(), names_to = "group", values_to = "dw") |> 
+  group_by(group) |> 
+  mutate(xmin = min(dw),
+         xmax = max(dw)) |> 
+  group_by(group, dw) |> 
+  add_count(name = "counts")
+```
+
+Set formula and priors:
+
+```{r setmultilevel_formula}
+
+# formula 
+bform2 = bf(dw | vreal(counts, xmin, xmax) ~ 0  + group, # 0 + allows to see the four locations with its own lambda . if you do x ~ 1  + group, then control location will consider your reference level. Try by yourself . 
+           family = paretocounts())
+
+# see the default / improper priors that the mdoel will use 
+default_prior(object = bform2, data = isd_data )
+#### set priors ####
+
+pr  <- c( # prior for the average (intercept) of predictors 
+  set_prior("normal(-1.20, 0.5)", coef = "groupcontrol"), # this is lambda for control location! )
+  set_prior("normal(-1.20, 0.5)", coef = "groupinflow"),
+  set_prior("normal(-1.20, 0.5)", coef = "grouppool"),
+  set_prior("normal(-1.20, 0.5)", coef = "groupoutflow")
+  ) 
+### validate priors: check if we have correctly state the priors
+
+validate_prior(prior = pr, formula = bform2, data = isd_data )
+
+# yes ! Now our model is expecting to find lamba values in between -1.2 +- 0.5 
+```
+
+```{r fit2}
+
+fit2 = brm(formula = bform2 , 
+           data = isd_data,
+           stanvars = stanvars,
+           family = paretocounts(),
+           chains = 4, 
+           iter = 1000,
+           seed = 7, # allow exact replication of results 
+          file = here("results","models","fit2"), # save the model. Please set your path folder. Note that if you want to refit the model, then you need to hide/deactivate this line of code 
+        sample_prior = "no" )
+```
+
+Plot posterior distributions, a.k.a:
+
+```{r posterior_draws2}
+
+p2 = fit2 |> 
+   add_epred_draws(seed = 9, # assure reproducibility  
+                      ndraws = 1000,
+                      newdata = isd_data)
+```
+
+Plot the lambdas
+
+```{r }
+
+# data frame of known lambda values
+lambda_vals <- data.frame(
+  group = c("control", "inflow", "pool", "outflow"),
+  lambda = c(-1.8, -1.5, -1.2, -1.1)
+)
+
+
+ggplot(data = p2, aes(y = group, x = .epred, fill = group)) + 
+  stat_halfeye(scale = 0.5) + 
+  # add stars at the right group + lambda
+  geom_point(
+    data = lambda_vals,
+    aes(x = lambda, y = group),
+    shape = 8,   # star
+    size = 4,
+    color = "red"
+  ) +
+  labs(x = expression(lambda),
+     y = "location", 
+     fill = "location",
+     subtitle = "Red stars represent the a priori simulated value of lambdas")+
+  theme_bw(base_size = 14)+ 
+  scale_x_continuous(breaks = seq(-2, -1, by = 0.25), limits = c(-2,-1))
+```
+
+## Visualize ISD
+
+> Jeff Wesner: This code extracts the cumulative probabilities using `pparetocounts()` and the plots them over raw data. Note that the raw data probabilities are simply estimates for visualization purposes. These plots are typical in studies of the ISD and are visually similar to plots of log-abundance vs log-size, making them more familiar to readers (maybe).
+
+```{r visualize_isd}
+
+
+# 1) sort raw data
+d = fit0$data |>
+  arrange(-dw) |> 
+  mutate(order = row_number(),
+         y_raw_prob = order/max(order)) # convert to 0-1 scale
+
+# 2) data grid to sample over
+data_grid = d |>
+  distinct(xmin, xmax) |> 
+  expand_grid(dw = 2^seq(log2(min(d$dw)), log2(max(d$dw)), length.out = 30)) |> # sequence is log 2 to ensure equal logarithmic spacing
+  mutate(counts = 1) # This is a default. Even if counts are >1 inthe raw data, make them = 1 here.
+
+# 3) extract posteriors
+isd_posts = data_grid |> 
+  tidybayes::add_epred_draws(fit0)
+
+# 4) get cumulative probabilities from posteriors
+isd_lines = isd_posts |> 
+  rowwise() |> 
+  mutate(y_prob = pparetocounts(x = dw, xmin = xmin ,xmax = xmax, lambda = .epred))
+
+# 5) plot raw vs posterior samples
+isd_lines |> 
+  filter(.draw <= 100) |> # limits to the first 100 draws. Change as needed or use a summary to plot instead of individual lines
+  ggplot(aes(x = dw, y = y_prob)) + 
+  geom_line(aes(group = .draw), alpha = 0.3) +
+  geom_point(data = d, aes(y = y_raw_prob),shape = 21, fill = "white", color = "black") +
+  labs(y = "P(X >= x)")+
+  theme_bw(base_size = 14)
+```
+
+## References

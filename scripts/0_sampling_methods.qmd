@@ -201,14 +201,56 @@ m3  |> filter(family != taxon_lowest)
 # since there are no difference between the two columns, we remove one of them 
 
 m4 <- m3|> select(-taxon_lowest, -laufnummer) 
+
+# what families are there?
+fams <- m4 |>
+  distinct(family) |>
+  arrange(family)
+```
+
+### Add allometric coefficients
+
+```{r load_coeff_pom}
+
+# load lw coefs from pomeranz
+lw_pomz <- read_csv("data/raw/lw/pomeranz_2022.csv")
+
+ #overlap between empirical families and taxon in pomeranz
+fams_not_in_pz <- setdiff(fams$family, lw_pomz$taxon)
+```
+
+```{r add_coeff}
+## Moving forward with pomeranz coefs ####
+lw_narrow <- lw_pomz |>
+  select(taxon, a, b, formula_type)
+### add coefficients to our df from Pomeranz et al. 2022 ####
+
+dat_lw <- m4 |>
+  left_join(lw_narrow, by = join_by(family == taxon))
+```
+
+```{r estiamte_dw}
+# estimate dw ####
+# assuming that size = length in mm? Yes. it is. 
+# also assuming that the total area sampled for each "sample" is approximately the same
+# if there are differences in area sampled, we would need to standardize this in some way. 
+dat_dw <- dat_lw |>
+  mutate(dw = case_when(formula_type == 1 ~ a * length^b,
+                        formula_type == 2 ~ exp(a + b * log(length))))
+```
+
+```{r remvoe_NAs}
+
+# first remove NAs observations
+dat_dw_1 = dat_dw |> filter(!is.na(dw)) 
 ```
 
 ### Save the processed data:
 
 ```{r save_kicknet_processed}
 
-write.csv(m4, here("data","processed", "kicknet_clean.csv" ))
-m4 = read.csv(here("data","processed", "kicknet_clean.csv" ))
+write.csv(dat_dw_1, here("data","processed", "kicknet_clean.csv" ))
+k = read.csv(here("data","processed", "kicknet_clean.csv" ))
 ```
 
 ### Visualize

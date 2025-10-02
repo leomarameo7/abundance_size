@@ -208,11 +208,13 @@ Please read @pomeranz2024: Maximum likelihood outperforms binning methods for de
 
 This session will be at Eawag (FXB 01) with Leonardo Capitani. You should use these 3.45 hours to:
 
--   Get used to the `brms` package syntax
+-   Discuss in group our expectations / hypothesis for research question 1 and 2
 
--   Build your first simple model with only an intercept and one predictor (`location`).
+-   Play and visualize the data: kick net only
 
--   Do prior predictive checks with this model
+-   Replicate in R the `isdbayes` package tutorial from this [link](https://github.com/jswesner/isdbayes)
+
+-   If time: how do the priors influence the posterior distribution of your model?
 :::
 
 ::: callout-note
@@ -221,6 +223,10 @@ This session will be at Eawag (FXB 01) with Leonardo Capitani. You should use th
 **from 08:15 till 12h**
 
 This session will be at Eawag (FXB 01) with Leonardo Capitani. You should use these 3.45 hours to:
+
+-   Play with your first model: how do the priors influence the posterior distribution of your model?
+
+-   Fit your first model to kick net data: what is the model formula that we are going to use to answer the first question ?
 :::
 
 ::: callout-note
