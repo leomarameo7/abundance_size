@@ -60,6 +60,40 @@ k2 <- k %>%
          ecomorphology = as.factor(ecomorphology))
 ```
 
+Then we add the column count:
+
+```{r}
+k3 <- k2 |> 
+  mutate(counts = 1)
+```
+
+Now I am going to add the xmin and xmax column by site and location:
+
+```{r xmin_xmax}
+k4 <-  k3 |> group_by(location, site) %>%
+  mutate(
+    xmin = min(dw, na.rm = TRUE),
+    xmax = max(dw, na.rm = TRUE)
+  ) %>%
+  ungroup()
+```
+
+See the values in a dynamic table:
+
+```{r}
+t <- k3 %>%
+  group_by(location, site) %>%
+  summarise(
+    xmin = round(min(dw, na.rm = TRUE),3),
+    xmax = round(max(dw, na.rm = TRUE),3),
+    .groups = "drop"
+  )
+
+datatable(t)
+```
+
+## Preliminary data visualization
+
 ::: callout-note
 Q: Does ecomorphology vary by site and by location ?
 :::
@@ -187,6 +221,76 @@ Remaining observations are:\
 `r paste(k3 %>% count(location) %>% mutate(txt = paste0(location, " = ", n)) %>% pull(txt), collapse = "; ")`.
 :::
 
+### Model formula
+
+```{r model_formula}
+
+# formula 
+form = bf(dw | vreal(counts, xmin, xmax) ~ 0  + location, # 0 + allows to see the four locations with its own lambda . if you do x ~ 1  + location, then control location will consider your reference level. Try by yourself . 
+           family = paretocounts())
+
+```
+
+### Check priors
+
+```{r check_priorss}
+
+# see -the default / improper priors that the mdoel will use 
+default_prior(object = form, data = k4 )
+
+#### set priors ####
+
+pr  <- c( # prior for the average (intercept) of predictors 
+  set_prior("normal(-1.20, 0.5)", coef = "locationControl"), # this is lambda for control location! )
+  set_prior("normal(-1.20, 0.5)", coef = "locationOutflow"),
+  set_prior("normal(-1.20, 0.5)", coef = "locationPool"),
+  set_prior("normal(-1.20, 0.5)", coef = "locationInflow")
+  ) 
+### validate priors: check if we have correctly state the priors
+
+validate_prior(prior = pr, formula = form, data = k4 )
+
+```
+
+Let's see if the model is going to work:
+
+```{r fit_the_model}
+
+m1 = brm(formula = form , 
+           data = k4,
+           stanvars = stanvars,
+           family = paretocounts(),
+           chains = 4, 
+           iter = 1000,
+           seed = 7, # allow exact replication of results 
+          file = here("results","models","m1"), # save the model. Please set your path folder. Note that if you want to refit the model, then you need to hide/deactivate this line of code 
+        sample_prior = "yes" )# yes, no or only
+```
+
+```{r}
+summary(m1)
+```
+
+Plot posterior distributions
+
+```{r}
+pp = m1 |> 
+   tidybayes::add_epred_draws(seed = 9, # assure reproducibility  
+                      ndraws = 100,
+                      newdata = k4)
+```
+
+```{r}
+
+ggplot(data = pp, aes(y = location, x = .epred, fill = location)) + 
+  stat_halfeye(scale = 0.5) +
+  labs(x = expression(lambda),
+     y = "location", 
+     fill = "location")+
+  theme_bw(base_size = 14)+ 
+  scale_x_continuous(breaks = seq(-1.25, -0.75, by = 0.1))
+```
+
 ## Replicate the vignettes for `isdbayes`
 
 You can see the original vignettes [here](https://github.com/jswesner/isdbayes).
@@ -299,7 +403,11 @@ Set formula and priors:
 # formula 
 bform2 = bf(dw | vreal(counts, xmin, xmax) ~ 0  + group, # 0 + allows to see the four locations with its own lambda . if you do x ~ 1  + group, then control location will consider your reference level. Try by yourself . 
            family = paretocounts())
+```
 
+### Set the priors
+
+```{r set_priors}
 # see the default / improper priors that the mdoel will use 
 default_prior(object = bform2, data = isd_data )
 #### set priors ####
@@ -316,6 +424,8 @@ validate_prior(prior = pr, formula = bform2, data = isd_data )
 
 # yes ! Now our model is expecting to find lamba values in between -1.2 +- 0.5 
 ```
+
+### Fit the model 
 
 ```{r fit2}
 
