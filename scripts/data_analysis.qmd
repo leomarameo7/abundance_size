@@ -41,6 +41,14 @@ newtheme <- theme_bw(base_size = 14)
 theme_set(newtheme)
 ```
 
+## Research questions: 
+
+::: callout-important
+-   Does beaver damming influence arthropod individual size distribution (ISD)?
+
+-   Does anthropogenic land area mediate the beaver effect on arthropods ISD ?
+:::
+
 ## Load data
 
 We are going to load the kick-net data set.
@@ -105,7 +113,7 @@ Jeff Wesner:
 This trimming procedure is sample-specific, not global. So if you have multiple samples, then you’ll need to run the `estimate_xmin` procedure on each sample, trim with a unique `xmin_est`, and recalculate xmin for each sample.
 :::
 
-```{r estimate_xmin}
+```{r removal_summary}
 removal_summary <- k4 %>%
   group_by(site, location) %>%
   summarise(
@@ -149,7 +157,7 @@ Question: What if we group only by `location` ? Since `site` will be consider as
 If we go on with this approach, then we are going to loose for the kick net method:
 
 ```{r trigger}
-# --- Join back to remove observations ---
+# --- remove observations ---
 k5 <- k4 %>%
   left_join(removal_summary %>% select(site, location, xmin_est),
             by = c("site", "location")) %>%
@@ -161,6 +169,8 @@ group_by(location, site)  |> # recompute the xmin and xmax
     xmax = max(dw, na.rm = TRUE)
   )  |> 
   ungroup()
+
+write.csv(k5, here("data","processed", "kicknet_triggered.csv"))
 ```
 
 ::: callout-important
@@ -319,6 +329,13 @@ ggplot(k5_next8, aes(x = dw)) +
 
 ## Model definition
 
+We are going to use the kick net data set, macroinvertebrates. Remember that we have used the `estimate_xmin()` function from the `poweRlaw` package [@gillespie2015] to estimate the lower value (xmin) from which the data start to follow the pareto distribution.
+
+```{r load_triggered_data}
+
+k5 <- read.csv(here("data","processed","kicknet_triggered.csv"))
+```
+
 First, the model formula:
 
 ```{r model_formula}
@@ -353,7 +370,7 @@ pr  <- c( # prior for the average (intercept) of predictors
 
 ```
 
-Let's validade if the priors are retained by the model without errors:
+Let's validate if the priors are retained by the model without errors:
 
 ```{r validapriors}
 ### validate priors: check if we have correctly state the priors
@@ -361,7 +378,7 @@ Let's validade if the priors are retained by the model without errors:
 validate_prior(prior = pr, formula = form, data = k5 )
 ```
 
-### Fit the model 
+### Fit the model
 
 Let's see if the model is going to work:
 
@@ -374,8 +391,8 @@ m1 = brm(formula = form ,
            chains = 4, 
            iter = 1000,
            seed = 7, # allow exact replication of results 
-          file = here("results","models","m1_removed"), # save the model. Please set your path folder. Note that if you want to refit the model, then you need to hide/deactivate this line of code 
-        sample_prior = "yes" )# options: "yes", "no" or "only". If you want to sample from priors, use ONLY. 
+          file = here("results","models","m1_triggered"), # save the model. Please set your path folder. Note that if you want to refit the model, then you need to hide/deactivate this line of code 
+        sample_prior = TRUE )# options: "yes", "no" or "only". If you want to sample from priors, use ONLY. 
 ```
 
 Get the summary of the model:
@@ -582,7 +599,7 @@ validate_prior(prior = pr, formula = bform2, data = isd_data )
 # yes ! Now our model is expecting to find lamba values in between -1.2 +- 0.5 
 ```
 
-### Fit the model 
+### Fit the model
 
 ```{r fit2}
 
