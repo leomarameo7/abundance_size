@@ -1,5 +1,5 @@
 ---
-title: "Does beaver damming influence arthropods' individual size distribution?"
+title: "Data analysis"
 author: 
 - name: Leonardo Capitani 
   email: leonardo.capitani@eawag.ch
@@ -41,7 +41,7 @@ newtheme <- theme_bw(base_size = 14)
 theme_set(newtheme)
 ```
 
-## Research questions: 
+## Research questions:
 
 ::: callout-important
 -   Does beaver damming influence arthropod individual size distribution (ISD)?
@@ -386,13 +386,14 @@ Let's see if the model is going to work:
 
 m1 = brm(formula = form , 
            data = k5,
+           prior = pr,
            stanvars = stanvars,
            family = paretocounts(),
            chains = 4, 
            iter = 1000,
            seed = 7, # allow exact replication of results 
           file = here("results","models","m1_triggered"), # save the model. Please set your path folder. Note that if you want to refit the model, then you need to hide/deactivate this line of code 
-        sample_prior = TRUE )# options: "yes", "no" or "only". If you want to sample from priors, use ONLY. 
+        sample_prior = "yes" )# options: "yes", "no" or "only". If you want to sample from priors, use ONLY. 
 ```
 
 Get the summary of the model:
@@ -409,10 +410,10 @@ pp = m1 |>
                       ndraws = 500,
                       newdata = k5)
 
-pp_sigma = m1 |> 
-   tidybayes::add_predicted_draws(seed = 9, # assure reproducibility  
-                      ndraws = 500,
-                      newdata = k5)
+#pp_sigma = m1 |> 
+   #tidybayes::add_predicted_draws(seed = 9, # assure reproducibility  
+                     # ndraws = 500,
+                     # newdata = k5)
 ```
 
 ```{r ggplot_epred}
@@ -443,24 +444,235 @@ Special mention to:
 
 The results from [`posterior_epred()`](https://mc-stan.org/rstantools/reference/posterior_epred.html) are a little strange to understand, and in the case of normal/Gaussian regression (and many other types of regression models!), they’re identical to the linear predictor ([`posterior_linpred()`](https://mc-stan.org/rstantools/reference/posterior_linpred.html)). These are the posterior draws of the expected value or mean of the the posterior distribution, or in the model. Behind the scenes, this is calculated by taking the average of each row’s posterior distribution and then taking the average of *that*.
 
-### Prior vs posterior
+### Test hypothesis
 
-```{r tidy_prior_vs_posterior}
-# Let's also visualize them. 
-library(bayesplot)
-mcmc_intervals(m1)
+Let's test:
 
+```{r testhypothesis}
+# Test the overall null hypothesis that all lambdas are equal
+hypothesis_test <- hypothesis(
+  x = m1,
+  hypothesis = c(
+    "locationControl - locationInflow = 0",
+    "locationControl - locationOutflow = 0",
+    "locationControl - locationPool = 0"
+  ),
+  # Optional: You can specify 'class = "b"' but brms often infers it.
+  # Optional: 'group' and 'dpar' may be needed if you had them, but here the coefficients are clear.
+  # Optional: 'test' can be "none", "ci", or "ec" (evidence for change).
+  # The default output gives a P-value (or similar Bayesian equivalent) and a Bayes Factor.
+  # For a traditional hypothesis test, look at the probability in the 'Pr(H1)' column,
+  # or the 'Evid.Ratio' (Bayes Factor).
+)
 
-tidy_inter <- bayesplot::mcmc_intervals_data(m1, prob = 0.66, # 66% intervals
-                                  prob_outer = 0.95,
-                                  #transformations =  "exp",
-                                  pars = vars(contains(c("prior_", "sigma","b_", "bsp","nu")) & -contains(c("sd_", "lp__", "lprior"))))
+print(hypothesis_test)
 
+plot(hypothesis_test)
 
-tidy_inter1 <- tidy_inter %>%
-  mutate(type = ifelse(grepl("^prior", sub("_.*", "", parameter)), "Prior", "Posterior"),
-         parameter = gsub("^prior_", "", parameter) ) 
+```
 
+```{r posteriordraws}
+library(brms)
+library(tidybayes)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(scales) 
+
+# Define the ROPE boundaries
+ROPE_LOWER <- -0.05
+ROPE_UPPER <- 0.05
+
+# -----------------------------------------------
+# STEP 1: CREATE THE 'diff_draws' OBJECT
+# -----------------------------------------------
+
+# Assumes 'fit' is your fitted brms model object
+diff_draws <- m1 %>%
+  # Spread the draws to get coefficients into separate columns
+  spread_draws(b_locationControl, b_locationInflow, b_locationOutflow, b_locationPool) %>%
+  
+  # Calculate all pairwise differences
+  mutate(
+    Inflow_vs_Control  = b_locationInflow - b_locationControl,
+    Outflow_vs_Control = b_locationOutflow - b_locationControl,
+    Pool_vs_Control    = b_locationPool - b_locationControl,
+    
+    Inflow_vs_Outflow  = b_locationInflow - b_locationOutflow,
+    Pool_vs_Inflow     = b_locationPool - b_locationInflow,
+    Pool_vs_Outflow    = b_locationPool - b_locationOutflow
+  ) %>%
+  
+  # Convert to long format
+  pivot_longer(
+    cols = ends_with("_vs_Control") | ends_with("_vs_Inflow") | ends_with("_vs_Outflow"),
+    names_to = "Comparison",
+    values_to = "Difference"
+  )
+
+# -----------------------------------------------
+# STEP 2: PREPARE DATA FOR FACETED ROPE PLOT
+# -----------------------------------------------
+
+control_diff_draws_rope <- diff_draws %>%
+  # Filter only the comparisons against the Control group
+  filter(Comparison %in% c("Inflow_vs_Control", "Outflow_vs_Control", "Pool_vs_Control")) %>%
+  
+  # Define ROPE Status for coloring the density slab
+  mutate(
+    ROPE_Status = case_when(
+      Difference < ROPE_LOWER ~ "Outside ROPE (Lower)",
+      Difference > ROPE_UPPER  ~ "Outside ROPE (Higher)",
+      TRUE                    ~ "Inside ROPE"
+    ),
+    # Simplify comparison names for better plot titles/facets
+    Comparison_Label = gsub("_vs_Control", " vs. Control", Comparison)
+  )
+
+# Calculate Probability Outside ROPE for Annotation
+summary_data <- control_diff_draws_rope %>%
+  group_by(Comparison_Label) %>%
+  summarise(
+    P_Outside = mean(Difference < ROPE_LOWER | Difference > ROPE_UPPER),
+    # Find the maximum difference for positioning the text
+    max_diff = max(Difference) 
+  ) %>%
+  mutate(
+    prob_text = paste0("P(Outside ROPE) = ", label_percent(accuracy = 0.1)(P_Outside))
+  )
+
+# -----------------------------------------------
+# STEP 3: GENERATE THE FACETED ROPE PLOT
+# -----------------------------------------------
+
+# -----------------------------------------------
+# STEP 3: GENERATE THE FACETED ROPE PLOT (Corrected)
+# -----------------------------------------------
+
+ggplot(control_diff_draws_rope, aes(x = Difference, fill = ROPE_Status)) +
+  
+  # 1. Draw the ROPE as a background "bar" using geom_rect
+  geom_rect(
+    xmin = ROPE_LOWER, xmax = ROPE_UPPER, 
+    ymin = -Inf, ymax = Inf,
+    fill = "gray90", alpha = 0.8
+  ) +
+  
+  # 2. Density area (half-eye) with fill mapped to ROPE_Status
+  stat_halfeye(
+    aes(y = 0), # Map to a static Y-axis for a density plot
+    .width = 0, 
+    point_colour = NA
+  ) +
+  
+  # 3. Add the null hypothesis line at 0
+  geom_vline(xintercept = 0, linetype = "dashed", color = "darkred", linewidth = 1) +
+  
+  # 4. Add the text annotation with the calculated probability (using summary_data)
+  geom_text(
+    data = summary_data,
+    aes(x = max_diff, y = Inf, label = prob_text),
+    inherit.aes = FALSE, # <-- FIX: Prevents inheriting the 'fill = ROPE_Status' aesthetic
+    hjust = 1.05,
+    vjust = 1.5,
+    size = 3.5,
+    fontface = "bold",
+    color = "black" # Optional: ensure the text color is always black
+  ) +
+  
+  # 5. Facet by comparison
+  facet_wrap(~ Comparison_Label, ncol = 1, strip.position = "left") +
+  
+  # Custom colors for ROPE status
+  scale_fill_manual(
+    values = c(
+      "Outside ROPE (Lower)" = "#D55E00", 
+      "Outside ROPE (Higher)" = "#0072B2", 
+      "Inside ROPE" = NA 
+    )
+  ) +
+  
+  labs(
+    x = "Posterior Difference (Treatment - Control)",
+    y = "", 
+    fill = "Probability Mass"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    panel.grid.major.y = element_blank(),
+    strip.placement = "outside",
+    strip.text = element_text(face = "bold")
+  )
+```
+
+## Human influence 
+
+Set the formula
+
+```{r model_formula_humaninfluence}
+
+# formula 
+form = bf(dw | vreal(counts, xmin, xmax) ~ 0  + location*human_influence_z, # 0 + allows to see the four locations with its own lambda . if you do x ~ 1  + location, then control location will consider your reference level (intercept).
+           family = paretocounts())
+```
+
+Let's see the default priors
+
+```{r dfpriors}
+
+default_prior(object = form, data = k5)
+
+```
+
+Fit the model:
+
+```{r fit_human_location}
+
+m2 = brm(formula = form , 
+           data = k5,
+           stanvars = stanvars,
+           family = paretocounts(),
+           chains = 4, 
+           iter = 1000,
+           seed = 7, # allow exact replication of results 
+          #file = here("results","models","m2_triggered"), # save the model. Please set your path folder. Note that if you want to refit the model, then you need to hide/deactivate this line of code 
+        sample_prior = "no" )# options: "yes", "no" or "only". If you want to sample from priors, use ONLY. 
+
+```
+
+Let's see the summary:
+
+```{r summ_m2}
+
+summary(m2)
+```
+
+Posterior epred:
+
+```{r pp_epred_m2}
+pp_m2 = m2 |> 
+   tidybayes::add_epred_draws(seed = 9, # assure reproducibility  
+                      ndraws = 500,
+                      newdata = k5)
+
+```
+
+```{r plot_lambda_human}
+
+ggplot(pp_m2, aes(x= human_influence_z, y = .epred, group = location))+
+  stat_lineribbon() 
+    
+
+```
+
+Let's see conditional effects:
+
+```{r cond_effects}
+
+conditional_effects(m2)
 
 
 ```
@@ -469,11 +681,11 @@ tidy_inter1 <- tidy_inter %>%
 
 You can see the original vignettes [here](https://github.com/jswesner/isdbayes).
 
-First, simulate some power law data using `rparetocounts()`. The code below simulates 300 body sizes from a power law with exponent lambda = -1.2, xmin = 1, and xmax = 1000.
+First, simulate some power law data using `rparetocounts()` function from the `isdbayes` package. The code below simulates 300 body sizes from a power law with exponent lambda = -1.2, xmin = 1, and xmax = 1000. In other words, `rparetocounts()`simulates body sizes between 1 and 1000 with frequencies corresponding to lambda = -1.2.
 
 ```{r simdata}
 
-# simulate data
+# simulate data. 
 
 dat = tibble(dw = rparetocounts(n = 300,  lambda = -1.2,  xmin = 1, xmax = 1000)) |> 
   mutate(xmin = min(dw),
@@ -626,7 +838,7 @@ p2 = fit2 |>
 
 Plot the lambdas
 
-```{r }
+```{r plotlambdas}
 
 # data frame of known lambda values
 lambda_vals <- data.frame(
