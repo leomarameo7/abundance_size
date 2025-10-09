@@ -27,6 +27,7 @@ csl: eco_lett.csl
 
 ```{r loadlib}
 library(tidyverse)
+library(bayesplot)
 library(DT)
 library(here)
 library(dplyr)
@@ -75,35 +76,15 @@ k3 <- k2 |>
   mutate(counts = 1)
 ```
 
-Now I am going to add the `xmin` and `xmax` columns by `site` and `location`:
-
-```{r xmin_xmax}
-k4 <-  k3 |> group_by(location, site)  |> 
-  mutate(
-    xmin = min(dw, na.rm = TRUE),
-    xmax = max(dw, na.rm = TRUE)
-  )  |> 
-  ungroup()
-```
-
-See the values in a dynamic table:
-
-```{r t}
-t <- k3  |> 
-  group_by(location, site)  |> 
-  summarise(
-    xmin = round(min(dw, na.rm = TRUE),3),
-    xmax = round(max(dw, na.rm = TRUE),3),
-    .groups = "drop")
-
-datatable(t)
-```
-
-## Addressing Undersampling
+## Addressing body size undersampling
 
 In field collections of body sizes, small organisms are commonly under-sampled. This contradicts that assumption of an exponential decline in frequency as body size increases and can lead to dramatically poor estimates of lambda [@clauset2009]. For this reason, [Jeff Wesner](jeff.wesner@usd.edu) and [Justin Pomeranz](jfpomeranz@gmail.com) strongly recommend checking for and removing under-sampled small sizes.
 
-### Find and remove biased sizes
+Let's state again with [Jeff Wesner](https://scholar.google.com/citations?hl=en&user=1J-5_yUAAAAJ&view_op=list_works&sortby=pubdate)'s words :
+
+|  Why do we chose a power law distribution called the bounded Pareto distribution? Because [@edwards2017] had shown that it was the best option for fitting individual size distribution. In general power law distributions assume that abundance always decreases with size. But in most cases with real data, small things are harder to measure and they get undercounted. By itself, that means that the data do not follow a power law distribution. As [@clauset2009] explain, unless we have perfectly sampled data (which is impossible), then **our goal is to first find the range of data that *do* follow a power law distribution, which in turn means relying on some sort of cutoff/algorithm**. After that, we choose a power law distribution (i.e. the bounded pareto distribution in the `isdbayes` package) and go with it. But the type of distribution we choose in the second step is irrelevant to the first step. 
+
+### Find and remove biased sizes 
 
 How do we know if body sizes are under-sampled? One option is to use the `estimate_xmin()` function from the `poweRlaw` package [@gillespie2015] (to install the package read [here](https://github.com/csgillespie/poweRlaw)). It first fits the data to a power law (unbounded, but that’s OK here). Then it uses Kolmogorov-Smirnoff sampling to find the minimum body mass above which the data follow a power law.
 
@@ -113,8 +94,11 @@ Jeff Wesner:
 This trimming procedure is sample-specific, not global. So if you have multiple samples, then you’ll need to run the `estimate_xmin` procedure on each sample, trim with a unique `xmin_est`, and recalculate xmin for each sample.
 :::
 
-```{r removal_summary}
-removal_summary <- k4 %>%
+### Trigger - cut off threshold
+
+```{r trigger}
+
+removal_summary <- k3 %>%
   group_by(site, location) %>%
   summarise(
     # Fit continuous power law and estimate xmin
@@ -132,33 +116,8 @@ removal_summary <- k4 %>%
     remaining_obs = total_obs - removed_obs,
     .groups = "drop"
   )
-
-# dynamic data table to inspect
-datatable(
-  removal_summary,
-  options = list(
-    pageLength = 10,   # rows per page
-    autoWidth = TRUE,  # auto adjust column widths
-    searching = TRUE,  # allow search/filter
-    ordering = TRUE    # allow sorting
-  ),
-  rownames = FALSE,
-  caption = "Observations Removed per Site-Location"
-)
-
-```
-
-> Jeff Wesner: note that the trimming can be quite large despite the relatively small `xmin_est` value. It can sometimes remove much more (such as 25 or 50%). That is usually not a problem as long as the remaining data has enough individuals to fit reliably, usually 300 or so.
-
-::: callout-note
-Question: What if we group only by `location` ? Since `site` will be consider as random effect ... or not consider at all.. maybe we can assume that all individuals that were collected in the, for example, `control` location, follows the same Pareto distribution.
-:::
-
-If we go on with this approach, then we are going to loose for the kick net method:
-
-```{r trigger}
 # --- remove observations ---
-k5 <- k4 %>%
+k5 <- k3 %>%
   left_join(removal_summary %>% select(site, location, xmin_est),
             by = c("site", "location")) %>%
   filter(dw >= xmin_est) %>%       # remove observations below xmin
@@ -173,8 +132,26 @@ group_by(location, site)  |> # recompute the xmin and xmax
 write.csv(k5, here("data","processed", "kicknet_triggered.csv"))
 ```
 
+```{r}
+#| label: tbl-cutoff
+# dynamic data table to inspect
+datatable(
+  removal_summary,
+  options = list(
+    pageLength = 10,   # rows per page
+    autoWidth = TRUE,  # auto adjust column widths
+    searching = TRUE,  # allow search/filter
+    ordering = TRUE    # allow sorting
+  ),
+  rownames = FALSE,
+  caption = "Observations Removed per Site-Location"
+)
+```
+
+> Jeff Wesner: note that the trimming can be quite large despite the relatively small `xmin_est` value. It can sometimes remove much more (such as 25 or 50%). That is usually not a problem as long as the remaining data has enough individuals to fit reliably, usually 300 or so.
+
 ::: callout-important
-We trigger `r nrow(k4) - nrow(k5)` observations (`r round((nrow(k4) - nrow(k5)) / nrow(k4) * 100, 1)`%).
+We trigger `r nrow(k3) - nrow(k5)` observations (`r round((nrow(k3) - nrow(k5)) / nrow(k3) * 100, 1)`%).
 
 Remaining observations are:\
 `r paste(k5 %>% count(location) %>% mutate(txt = paste0(location, " = ", n)) %>% pull(txt), collapse = "; ")`.
@@ -184,7 +161,8 @@ Remaining observations are:\
 
 Q: Does ecomorphology vary by site and by location ?
 
-```{r variation_ecomorphology}
+```{r }
+#| label: fig-variation_ecomorphology
 
 ggplot(k2, aes( x = site, y = ecomorphology))+
   geom_point()+
@@ -226,8 +204,10 @@ sentences
 
 ```
 
-```{r human_influence_variation}
-
+```{r}
+#| label: fig-humanbylocation
+#| fig-cap: ""
+#| 
 ggplot(k2, aes( x = site, y = human_influence_z, color = location)) + 
   geom_point()+ 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -239,12 +219,13 @@ Human influence does not vary by site.
 Which distribution does the data look like?
 :::
 
-```{r hist, fig.width=10, fig.height=12}
+```{r , fig.width=10, fig.height=12}
+#| label: fig-hist1
 # Get unique sites
-sites_list <- unique(k4$site)
+sites_list <- unique(k3$site)
 
 # First 8 sites
-k4_first8 <- k4 %>% filter(site %in% sites_list[1:8])
+k4_first8 <- k3 %>% filter(site %in% sites_list[1:8])
 
 ggplot(k4_first8, aes(x = dw)) +
   geom_histogram(
@@ -262,7 +243,7 @@ ggplot(k4_first8, aes(x = dw)) +
   ) 
 
 # Next 8 sites
-k4_next8 <- k4 %>% filter(site %in% sites_list[9:16])
+k4_next8 <- k3 %>% filter(site %in% sites_list[9:16])
 
 ggplot(k4_next8, aes(x = dw)) +
   geom_histogram(
@@ -284,7 +265,8 @@ ggplot(k4_next8, aes(x = dw)) +
 
 Then we plot the triggered data frame:
 
-```{r hist2, fig.width=10, fig.height=12}
+```{r , fig.width=10, fig.height=12}
+#| label: fig-histtriggered
 # Get unique sites
 sites_list <- unique(k5$site)
 
@@ -327,9 +309,9 @@ ggplot(k5_next8, aes(x = dw)) +
 
 ```
 
-## Model definition
+## M1: location influence on ISD
 
-We are going to use the kick net data set, macroinvertebrates. Remember that we have used the `estimate_xmin()` function from the `poweRlaw` package [@gillespie2015] to estimate the lower value (xmin) from which the data start to follow the pareto distribution.
+We are going to use the trimmed kick net data set. Remember that we have used the `estimate_xmin()` function from the `poweRlaw` package [@gillespie2015] to estimate the lower value (xmin) from which the data start to follow the power law - pareto distribution as suggested in [@clauset2009].
 
 ```{r load_triggered_data}
 
@@ -389,8 +371,11 @@ m1 = brm(formula = form ,
            prior = pr,
            stanvars = stanvars,
            family = paretocounts(),
-           chains = 4, 
-           iter = 1000,
+           iter = 3000, 
+           warmup = 1000,  # number of warmup iterations
+           chains = 4,
+           cores = 10, 
+           threads = threading(2),
            seed = 7, # allow exact replication of results 
           file = here("results","models","m1_triggered"), # save the model. Please set your path folder. Note that if you want to refit the model, then you need to hide/deactivate this line of code 
         sample_prior = "yes" )# options: "yes", "no" or "only". If you want to sample from priors, use ONLY. 
@@ -402,7 +387,59 @@ Get the summary of the model:
 summary(m1)
 ```
 
-Plot posterior distributions using `add_epred_draws` or `add_predicted_draws`
+### Prior vs Posterior
+
+```{r priorvsposterior}
+# Let's also visualize them. 
+tidy_inter <- mcmc_intervals_data(m1, prob = 0.66, # 66% intervals
+                                  prob_outer = 0.95,
+                                  #transformations =  "exp",
+                                  pars = vars(contains(c("prior_", "b_"))))
+
+
+tidy_inter1 <- tidy_inter %>%
+  mutate(type = ifelse(grepl("^prior", sub("_.*", "", parameter)), "Prior", "Posterior"),
+         parameter = gsub("^prior_", "", parameter) ) 
+```
+
+```{r}
+#| label: fig-postvsprior
+  
+# 1. Redefine the custom labels map to use paste() and subscript notation
+# The labels must be wrapped in 'expression()' and use the tilde (~) for spacing
+# and the subscript notation.
+parameter_expressions <- c(
+  "b_locationControl" = expression(lambda[Control]),
+  "b_locationInflow"  = expression(lambda[Inflow]),
+  "b_locationOutflow" = expression(lambda[Outflow]),
+  "b_locationPool"    = expression(lambda[Pool])
+)
+
+# 2. Plot using scale_y_discrete with the custom labels
+ggplot(tidy_inter1, aes(x = m, y = parameter, color = type)) +
+  geom_pointinterval(aes(xmin = l, xmax = h), position = position_dodge(width = 0.5), size = 8) +
+  geom_pointinterval(aes(xmin = ll, xmax = hh), position = position_dodge(width = 0.5), size = 2) +
+  
+  # === KEY CHANGE HERE ===
+  # Use the named vector for labels
+  scale_y_discrete(labels = parameter_expressions) +
+  
+  theme_bw(base_size = 18) +
+  labs(
+    color = NULL,
+    x = expression("Parameter value (" * lambda * ")"),
+    y = NULL # Keep y axis title empty as the labels are descriptive
+  ) +
+  theme(axis.text = element_text(colour = "black"))
+```
+
+### Posterior lambdas prediction 
+
+Plot posterior distributions using `add_epred_draws:`
+
+::: callout-tip
+Remember: `add_epred_draws` function is going to predict $\lambda$, with values like -2.1, -2.08, -1.2, etc.. If you remember, the bounded Pareto distribution uses the individual body sizes to predict the shape of the decline ($\lambda$) in frequency from small to large individuals. 
+:::
 
 ```{r pp_epred}
 pp = m1 |> 
@@ -416,8 +453,9 @@ pp = m1 |>
                      # newdata = k5)
 ```
 
-```{r ggplot_epred}
-
+```{r }
+#| label: fig-ggplot_epred
+#| 
 ggplot(data = pp, aes(y = location, x = .epred, fill = location)) + 
   stat_halfeye(scale = 0.5) +
   labs(x = expression(lambda),
@@ -426,191 +464,161 @@ ggplot(data = pp, aes(y = location, x = .epred, fill = location)) +
   theme_bw(base_size = 14)
 ```
 
-As far as I understand, in a multilevel model, there are three sources of uncertainty:
-
-1.  the residual (observation-level) variance ($\sigma$)
-2.  the uncertainty in the fixed coefficients
-3.  the uncertainty in the variance parameters for the grouping factors
-
-To include all sources of uncertainty call ``` brms::``predict(.) ``` or ``` tidybayes::``add_predicted_draws(.) ``` or `tidybayes::predicted_draws(.)` or `brms::posterior_predict(.)`.
-
-To exclude 1. call `fitted(.)` or `brms::posterior_linepred(.)` or `linpred_draws(.)` or `tidybayes::add_fitted_draws(.)`.
-
-To exclude 3. (possible partially if you want), use the `re_formula` argument.
-
-The results from `posterior_predict(.)` and `posterior_linpred(.)` have the same mean, but the full posterior predictions that incorporate the estimated $\sigma$ have a much wider range of plausible values.
-
-Special mention to:
-
-The results from [`posterior_epred()`](https://mc-stan.org/rstantools/reference/posterior_epred.html) are a little strange to understand, and in the case of normal/Gaussian regression (and many other types of regression models!), they’re identical to the linear predictor ([`posterior_linpred()`](https://mc-stan.org/rstantools/reference/posterior_linpred.html)). These are the posterior draws of the expected value or mean of the the posterior distribution, or in the model. Behind the scenes, this is calculated by taking the average of each row’s posterior distribution and then taking the average of *that*.
-
 ### Test hypothesis
 
-Let's test:
+To test if beaver damming influence the ISD, we want to compare the ISD's $\lambda$ of the four location: `Control`, `Inflow`, `Pool`, `Outflow`.
 
-```{r testhypothesis}
-# Test the overall null hypothesis that all lambdas are equal
-hypothesis_test <- hypothesis(
-  x = m1,
-  hypothesis = c(
-    "locationControl - locationInflow = 0",
-    "locationControl - locationOutflow = 0",
-    "locationControl - locationPool = 0"
-  ),
-  # Optional: You can specify 'class = "b"' but brms often infers it.
-  # Optional: 'group' and 'dpar' may be needed if you had them, but here the coefficients are clear.
-  # Optional: 'test' can be "none", "ci", or "ec" (evidence for change).
-  # The default output gives a P-value (or similar Bayesian equivalent) and a Bayes Factor.
-  # For a traditional hypothesis test, look at the probability in the 'Pr(H1)' column,
-  # or the 'Evid.Ratio' (Bayes Factor).
+We define the Range of Practical Equivalence (ROPE) as a small region around the null value (zero difference) where an effect is considered *negligibly small* for practical purposes, regardless of whether it's statistically different from zero. We choose $ROPE =  ±0.01$. Why ? Because  ±0.01 interval represents a difference in the exponent that is 1% or less of the total estimated value (e.g., 0.01 is 0.5% of 2 and 1% of 1 ). A difference of this magnitude is generally considered negligible because the resulting change in the frequency of rare events is minimal. For instance, in the power-law tail, a 0.01 difference in the exponent only results in a change in frequency of about 1% to 7% for values 10 to 1,000 times the minimum size, which is often too small to be meaningful in an ecological context. Therefore, if the posterior distribution for the difference is contained within ±0.01, we can confidently conclude that the difference between the two locations is practically equivalent to zero.
+
+With the followin plot we will show the posterior probability of the difference in the Pareto exponent ($\lambda$) falling into three regions below the ROPE (a meaningful negative difference), within the ROPE (a practically null difference), or above the ROPE (a meaningful positive difference). Based on our ±0.01 ROPE, the interpretation hinges on the percentage text labels: if a comparison has a high percentage within the ROPE, it suggests the difference in $\lambda$ is too small to be meaningful; otherwise, it suggests a practically significant difference exists in that direction
+
+```{r extract_posterior_draws}
+# 1. Extract and spread the posterior draws of the mu coefficients (the alpha exponents)
+draws_alpha_spread <- m1 |>
+  tidybayes::spread_draws(
+    b_locationControl,
+    b_locationInflow,
+    b_locationOutflow,
+    b_locationPool
+  )
+
+# 2. Compute the differences and re-gather for plotting
+differences <- draws_alpha_spread |>
+  dplyr::mutate(
+    # Control vs Pool
+    Control_vs_Pool =  b_locationPool - b_locationControl ,
+    # Control vs Inflow
+    Control_vs_Inflow = b_locationInflow - b_locationControl  ,
+    # Control vs Outflow
+    Control_vs_Outflow =  b_locationOutflow - b_locationControl
+  ) |>
+  # Select only the comparison columns and re-gather for plotting
+  dplyr::select(.draw, starts_with("Control_vs")) |>
+  tidyr::pivot_longer(
+    cols = starts_with("Control_vs"),
+    names_to = "comparison",
+    values_to = ".prediction" # Use .prediction to match the reference code structure
+  )
+```
+
+```{r define_cutoff}
+# Define cutoffs (Range of Practical Equivalence for difference in alpha)
+# Adjust these based on what constitutes a negligible difference in your Pareto exponent.
+cutoff_1 <- -0.01
+cutoff_2 <- 0.01
+
+# Compute proportions and create text strings for each comparison
+summary_data <- differences |>
+  dplyr::group_by(comparison) |>
+  dplyr::summarise(
+    prop_above = 100 * sum(.prediction > cutoff_2) / dplyr::n(),
+    prop_below = 100 * sum(.prediction < cutoff_1) / dplyr::n(),
+    prop_rope = 100 * sum(.prediction >= cutoff_1 & .prediction <= cutoff_2) / dplyr::n()
+  ) |>
+  dplyr::mutate(
+    above_txt = paste0(round(prop_above, 1), " %: Diff > ", cutoff_2),
+    below_txt = paste0(round(prop_below, 1), " %: Diff < ", cutoff_1),
+    null_txt = paste0(round(prop_rope, 1), " %: ROPE")
+  )
+
+# Merge the text strings back into the differences data for plotting labels
+plot_data <- differences |>
+  dplyr::left_join(summary_data, by = "comparison")
+```
+
+```{r}
+#| label: fig-hypothesis
+# 1. Define the custom labels for faceting
+facet_labels <- c(
+  "Control_vs_Pool" = "Pool - Control ",
+  "Control_vs_Inflow" = "Inflow - Control",
+  "Control_vs_Outflow" = "Outflow - Control"
 )
 
-print(hypothesis_test)
+# Fill colors (redefined for completeness)
+fill_colors <- c(
+  sink = "coral",
+  ROPE = "lightgrey",
+  source = "skyblue"
+)
 
-plot(hypothesis_test)
-
-```
-
-```{r posteriordraws}
-library(brms)
-library(tidybayes)
-library(ggplot2)
-library(dplyr)
-library(tidyr)
-library(scales) 
-
-# Define the ROPE boundaries
-ROPE_LOWER <- -0.05
-ROPE_UPPER <- 0.05
-
-# -----------------------------------------------
-# STEP 1: CREATE THE 'diff_draws' OBJECT
-# -----------------------------------------------
-
-# Assumes 'fit' is your fitted brms model object
-diff_draws <- m1 %>%
-  # Spread the draws to get coefficients into separate columns
-  spread_draws(b_locationControl, b_locationInflow, b_locationOutflow, b_locationPool) %>%
-  
-  # Calculate all pairwise differences
-  mutate(
-    Inflow_vs_Control  = b_locationInflow - b_locationControl,
-    Outflow_vs_Control = b_locationOutflow - b_locationControl,
-    Pool_vs_Control    = b_locationPool - b_locationControl,
-    
-    Inflow_vs_Outflow  = b_locationInflow - b_locationOutflow,
-    Pool_vs_Inflow     = b_locationPool - b_locationInflow,
-    Pool_vs_Outflow    = b_locationPool - b_locationOutflow
-  ) %>%
-  
-  # Convert to long format
-  pivot_longer(
-    cols = ends_with("_vs_Control") | ends_with("_vs_Inflow") | ends_with("_vs_Outflow"),
-    names_to = "Comparison",
-    values_to = "Difference"
-  )
-
-# -----------------------------------------------
-# STEP 2: PREPARE DATA FOR FACETED ROPE PLOT
-# -----------------------------------------------
-
-control_diff_draws_rope <- diff_draws %>%
-  # Filter only the comparisons against the Control group
-  filter(Comparison %in% c("Inflow_vs_Control", "Outflow_vs_Control", "Pool_vs_Control")) %>%
-  
-  # Define ROPE Status for coloring the density slab
-  mutate(
-    ROPE_Status = case_when(
-      Difference < ROPE_LOWER ~ "Outside ROPE (Lower)",
-      Difference > ROPE_UPPER  ~ "Outside ROPE (Higher)",
-      TRUE                    ~ "Inside ROPE"
-    ),
-    # Simplify comparison names for better plot titles/facets
-    Comparison_Label = gsub("_vs_Control", " vs. Control", Comparison)
-  )
-
-# Calculate Probability Outside ROPE for Annotation
-summary_data <- control_diff_draws_rope %>%
-  group_by(Comparison_Label) %>%
-  summarise(
-    P_Outside = mean(Difference < ROPE_LOWER | Difference > ROPE_UPPER),
-    # Find the maximum difference for positioning the text
-    max_diff = max(Difference) 
-  ) %>%
-  mutate(
-    prob_text = paste0("P(Outside ROPE) = ", label_percent(accuracy = 0.1)(P_Outside))
-  )
-
-# -----------------------------------------------
-# STEP 3: GENERATE THE FACETED ROPE PLOT
-# -----------------------------------------------
-
-# -----------------------------------------------
-# STEP 3: GENERATE THE FACETED ROPE PLOT (Corrected)
-# -----------------------------------------------
-
-ggplot(control_diff_draws_rope, aes(x = Difference, fill = ROPE_Status)) +
-  
-  # 1. Draw the ROPE as a background "bar" using geom_rect
-  geom_rect(
-    xmin = ROPE_LOWER, xmax = ROPE_UPPER, 
-    ymin = -Inf, ymax = Inf,
-    fill = "gray90", alpha = 0.8
-  ) +
-  
-  # 2. Density area (half-eye) with fill mapped to ROPE_Status
+# 2. Plot the differences using facets with the new labels
+(p_differences <- ggplot(plot_data, aes(x = .prediction)) +
+  # Use the 'labeller' argument to apply the custom labels
+  facet_wrap(~ comparison, ncol = 1, scales = "free_y", labeller = labeller(comparison = facet_labels)) +
   stat_halfeye(
-    aes(y = 0), # Map to a static Y-axis for a density plot
-    .width = 0, 
-    point_colour = NA
+    aes(
+      y = 0,
+      fill = after_stat(case_when(
+        x < cutoff_1 ~ "sink",
+        x > cutoff_2 ~ "source",
+        TRUE ~ "ROPE"
+      ))
+    ),
+    adjust = 0.8,
+    slab_alpha = 0.8,
+    show.legend = FALSE
   ) +
-  
-  # 3. Add the null hypothesis line at 0
-  geom_vline(xintercept = 0, linetype = "dashed", color = "darkred", linewidth = 1) +
-  
-  # 4. Add the text annotation with the calculated probability (using summary_data)
-  geom_text(
-    data = summary_data,
-    aes(x = max_diff, y = Inf, label = prob_text),
-    inherit.aes = FALSE, # <-- FIX: Prevents inheriting the 'fill = ROPE_Status' aesthetic
-    hjust = 1.05,
-    vjust = 1.5,
-    size = 3.5,
-    fontface = "bold",
-    color = "black" # Optional: ensure the text color is always black
-  ) +
-  
-  # 5. Facet by comparison
-  facet_wrap(~ Comparison_Label, ncol = 1, strip.position = "left") +
-  
-  # Custom colors for ROPE status
-  scale_fill_manual(
-    values = c(
-      "Outside ROPE (Lower)" = "#D55E00", 
-      "Outside ROPE (Higher)" = "#0072B2", 
-      "Inside ROPE" = NA 
-    )
-  ) +
-  
-  labs(
-    x = "Posterior Difference (Treatment - Control)",
-    y = "", 
-    fill = "Probability Mass"
-  ) +
-  theme_minimal() +
+  geom_vline(xintercept = c(cutoff_1, cutoff_2), linetype = "dashed", color = "black") +
+  scale_fill_manual(values = fill_colors) +
+  scale_x_continuous(breaks = seq(-3, 3, 0.5)) +
+  theme_bw(base_size = 14) +
   theme(
-    legend.position = "bottom",
+    legend.position = "none",
+    axis.title.y = element_blank(),
     axis.text.y = element_blank(),
     axis.ticks.y = element_blank(),
-    panel.grid.major.y = element_blank(),
-    strip.placement = "outside",
-    strip.text = element_text(face = "bold")
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank(),
+    strip.text = element_text(face = "bold") # Ensure labels are clear and bold
+  ) +
+  labs(
+    x = expression("Difference in arthropod ISD exponent (" * lambda["Control"] - lambda["Other"] * ")"),
+    y = NULL
+  ) +
+  # Add region labels for each facet using geom_text
+  geom_text(
+    data = summary_data,
+    aes(x = min(plot_data$.prediction) - 0.1, y = 0.1, label = below_txt),
+    hjust = 0, size = 3.5, check_overlap = TRUE
+  ) +
+  geom_text(
+    data = summary_data,
+    aes(x = 0, y = 0.12, label = null_txt),
+    hjust = 0.5, size = 3.5
+  ) +
+  geom_text(
+    data = summary_data,
+    aes(x = max(plot_data$.prediction) + 0.1, y = 0.1, label = above_txt),
+    hjust = 1, size = 3.5, check_overlap = TRUE
   )
+)
 ```
 
-## Human influence 
+### Results
 
-Set the formula
+-   We found that with 87% probability `inflow` ISD exponent ($\lambda$) was higher than `control` ISD exponent.
+
+-   We found strong evidence (100% probability) that `outflow` ISD exponent ($\lambda$) was higher than the `control` ISD exponent.
+
+-   Our data indicated that with 60% probability `pool` ISD exponent ($\lambda$) was higher than the `control` ISD exponent.
+
+### Conclusions
+
+The beaver damming creates habitats (`Inflow`, `Outflow`, `Pool`) that systematically lead to a less steep macro invertebrates body size distribution (less negative λ), suggesting these locations are relatively more favorable for large-bodied macroi nvertebrates compared to stream locations where beaver do not exert his damming activity.
+
+## M2: Human influence\*beaver and ISD
+
+**Human influence**
+
+These variable represents soil cover extension (square meters $m^2$ ) that is defined as agriculture or urban. by Valentin Moser downloaded soil area extension for each site from Geodienste.ch and swisstopo.admin.ch using ARCGIS (Pro v. 2.8, Esri Inc., 2021 und QGIS 3.40 'Bratislava' 2024). He selected a radius of 250 meters around the center of each `Pool` location So it is a variable that varies by site and not by location. A visual inspection of the data showed highly reliable classification for agricultural (e.g., crop fields, pastures, areas that farmers maintain for biodiversity) and natural (e.g., forests, riparian areas) land-use. Areas without classified land-use were very often urban areas and human infrastructure, such as streets, railways, and housing. Therefore, missing data was assigned to urban land-use. Finally, he aggregated agricultural and urban land cover estimates into an overall human impact variable called `human_influence`**.**
+
+Let's first draw a directed acyclic graph that represent our hypotheses:
+
+![](images/DAG.png){#fig-DAG width="483"}
+
+Now let's define the model formula:
 
 ```{r model_formula_humaninfluence}
 
@@ -618,6 +626,8 @@ Set the formula
 form = bf(dw | vreal(counts, xmin, xmax) ~ 0  + location*human_influence_z, # 0 + allows to see the four locations with its own lambda . if you do x ~ 1  + location, then control location will consider your reference level (intercept).
            family = paretocounts())
 ```
+
+### Default priors
 
 Let's see the default priors
 
@@ -627,19 +637,55 @@ default_prior(object = form, data = k5)
 
 ```
 
+Flat priors... mmmh, that's not a good default setting to see and use. This is because if we use flat priors, we are allowing the model to predict whatever lambda value, be positive or negative. And that's just not the case: we already know that lambda should be in between -2 and -1 range.
+
+### Set priors
+
+Let's define our priors that makes sense:
+
+```{r definepriors}
+
+#### set priors ####
+
+pr_human  <- c( # prior for the average (intercept) of predictors 
+  set_prior("normal(-1.20, 0.5)", coef = "locationControl"), # this is lambda for control location! )
+  set_prior("normal(-1.20, 0.5)", coef = "locationOutflow"),
+  set_prior("normal(-1.20, 0.5)", coef = "locationPool"),
+  set_prior("normal(-1.20, 0.5)", coef = "locationInflow"),
+  set_prior("normal(0, 0.2)", coef = "human_influence_z"),# how much land area  by agricolture and urban settlement infleucne lambda ?
+  set_prior("normal(0, 0.2)", coef = "locationInflow:human_influence_z"), # inflow and human influence
+  set_prior("normal(0, 0.2)", coef = "locationOutflow:human_influence_z"), # outflow and human influence 
+  set_prior("normal(0, 0.2)", coef = "locationPool:human_influence_z") # pool and human influence 
+  ) 
+```
+
+### Validate priors
+
+```{r val_priors}
+
+validate_prior(pr_human, formula = form, data = k5)
+
+```
+
+### Model fit 
+
 Fit the model:
 
 ```{r fit_human_location}
 
 m2 = brm(formula = form , 
            data = k5,
+           prior = pr_human,
            stanvars = stanvars,
            family = paretocounts(),
-           chains = 4, 
-           iter = 1000,
-           seed = 7, # allow exact replication of results 
-          #file = here("results","models","m2_triggered"), # save the model. Please set your path folder. Note that if you want to refit the model, then you need to hide/deactivate this line of code 
-        sample_prior = "no" )# options: "yes", "no" or "only". If you want to sample from priors, use ONLY. 
+           iter = 3000, 
+           warmup = 1000,  # number of warmup iterations
+           chains = 4,
+           cores = 10, 
+           threads = threading(2),
+           seed = 77, # allow exact replication of results 
+         sample_prior = "yes",# options: "yes", "no" or "only". If you want to sample from priors, use ONLY. 
+         file = here("results","models","m2_triggered"))
 
 ```
 
@@ -650,34 +696,29 @@ Let's see the summary:
 summary(m2)
 ```
 
-Posterior epred:
+### Posterior epred:
 
 ```{r pp_epred_m2}
-pp_m2 = m2 |> 
-   tidybayes::add_epred_draws(seed = 9, # assure reproducibility  
+pp_m2  <-  m2 |> 
+           add_epred_draws(seed = 9, # assure reproducibility  
                       ndraws = 500,
                       newdata = k5)
+```
+
+### Plot lambda 
+
+```{r }
+#| label: fig-plot_lambda_human
+ggplot(pp_m2, aes(x = human_influence_z, y = .epred, group = location, color = location, fill = location)) +
+  stat_lineribbon(
+    .width = 0.95, # Specifies the confidence level for the ribbon
+    alpha = 0.3 # Adds transparency to the ribbon so the line shows through
+  )+ 
+  labs(y = expression(lambda))
 
 ```
 
-```{r plot_lambda_human}
-
-ggplot(pp_m2, aes(x= human_influence_z, y = .epred, group = location))+
-  stat_lineribbon() 
-    
-
-```
-
-Let's see conditional effects:
-
-```{r cond_effects}
-
-conditional_effects(m2)
-
-
-```
-
-## Replicate the vignettes for `isdbayes`
+## Vignettes for using `isdbayes`
 
 You can see the original vignettes [here](https://github.com/jswesner/isdbayes).
 
